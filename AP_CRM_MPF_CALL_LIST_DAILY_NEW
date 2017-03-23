@@ -864,69 +864,127 @@ BEGIN
     FROM ( SELECT ROW_NUMBER() OVER (ORDER BY TO_NUMBER(PRIOR_SEC), MAX_CREDIT_AMOUNT DESC) AS ORD,
                   VVV.*
              FROM ( SELECT 
-                    /*
-                     case when attempt_days_M0 is null and to_number(priority) = 1 then 1
-                          when attempt_days_M0 =1 and to_number(priority) = 1 then 2
-                          when attempt_days_M0 =2 and to_number(priority) = 1 and max_credit_amount >=15000000 then 3
-                          when attempt_days_M0 is null and attempt_days_M1 is null and to_number(priority) = 2 then 4
-                          when attempt_days_M0 is null and to_number(priority) = 2 then 5
-                          when attempt_days_M0 =1 and to_number(priority) = 2 then 6
-                          when attempt_days_M0 is null and to_number(priority) = 3 then 7
-                          when attempt_days_M0 =1 and to_number(priority) = 3 then 8
-                      else 99 end as prior_sec,
-                      */
-                       case when attempt_days_M0 is null and to_number(priority) = 1 then 1
+
+                        case when attempt_days_M0 is null and to_number(priority) = 1 then 1
                           when attempt_days_M0 =1 and to_number(priority) = 1 then 2
                           when attempt_days_M0 =2 and to_number(priority) = 1 then 3
                           when attempt_days_M0 =3 and to_number(priority) = 1 then 4
                           when attempt_days_M0 =4 and to_number(priority) = 1 then 5
                           when attempt_days_M0 =5 and to_number(priority) = 1 then 6
                           when attempt_days_M0 =6 and to_number(priority) = 1 then 7
+                          when trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate)) and attempt_days_M0 = 7 and to_number(priority) = 1 then 8
+                          when trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate)) and attempt_days_M0 = 8 and to_number(priority) = 1 then 9
+                          when trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate)) and attempt_days_M0 = 9 and to_number(priority) = 1 then 10
+                          
+                          /* Pilot VIP */
+                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 3 then 11
+                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 3 then 12
+                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 4 then 13
+                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 4 then 14
+                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 5 then 15
+                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 5 then 16
+                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 6 then 17
+                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 6 then 18
+                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 7 then 19
+                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 7 then 20
+                          when attempt_days_M0 is null and attempt_days_M1 is null and to_number(priority) = 2 then 21
+                          
+                          /* Pilot Fake P1 */
+                          when attempt_days_M0 is null and final_flag='pilot_fake_p1' and to_number(priority) = 2 then 22
+                          when attempt_days_M0 =1 and final_flag='pilot_fake_p1' and to_number(priority) = 2 then 23
+                          when attempt_days_M0 is null and final_flag='pilot_fake_p1' and to_number(priority) = 3 then 24
+                          when attempt_days_M0 =1 and final_flag='pilot_fake_p1' and to_number(priority) = 3 then 25
+                          when attempt_days_M0 is null and final_flag='pilot_fake_p1' and to_number(priority) between 4 and 9  then 26
+                          when attempt_days_M0 =1 and final_flag='pilot_fake_p1' and to_number(priority) between 4 and 9 then 27
+                          when attempt_days_M0 is null and final_flag='pilot_fake_p1' and to_number(priority) >= 10 then 28
+                          when attempt_days_M0 =1 and final_flag='pilot_fake_p1' and to_number(priority) >= 10 then 29
 
-                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 3 then 8
-                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 3 then 9
-                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 4 then 10
-                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 4 then 11
-                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 5 then 12
-                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 5 then 13
-                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 6 then 14
-                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 6 then 15
-                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 7 then 16
-                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 7 then 17
-                          when attempt_days_M0 is null and attempt_days_M1 is null and to_number(priority) = 2 then 18
+                          /* Priority 4 */
+                          when attempt_days_M0 is null and to_number(priority) = 2 then 30
+                          when attempt_days_M0 =1 and to_number(priority) = 2 then 31                        
+                          when attempt_days_M0 =2 and to_number(priority) = 2 then 32
+                          when attempt_days_M0 =3 and to_number(priority) = 2 then 33    
+                          when attempt_days_M0 =4 and to_number(priority) = 2 then 34 
+                          when attempt_days_M0 =5 and to_number(priority) = 2 then 35
+                          when attempt_days_M0 =6 and to_number(priority) = 2 then 36
+                          when trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate)) and attempt_days_M0 = 7 and to_number(priority) = 2 then 37
+                          when trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate)) and attempt_days_M0 = 8 and to_number(priority) = 2 then 38
+                          when trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate)) and attempt_days_M0 = 9 and to_number(priority) = 2 then 39
 
-                          when attempt_days_M0 is null and final_flag='pilot_fake_p1' and to_number(priority) = 2 then 19
-                          when attempt_days_M0 =1 and final_flag='pilot_fake_p1' and to_number(priority) = 2 then 20
-                          when attempt_days_M0 is null and final_flag='pilot_fake_p1' and to_number(priority) = 3 then 21
-                          when attempt_days_M0 =1 and final_flag='pilot_fake_p1' and to_number(priority) = 3 then 22
-                          when attempt_days_M0 is null and final_flag='pilot_fake_p1' and to_number(priority) between 4 and 9  then 23
-                          when attempt_days_M0 =1 and final_flag='pilot_fake_p1' and to_number(priority) between 4 and 9 then 24
-                          when attempt_days_M0 is null and final_flag='pilot_fake_p1' and to_number(priority) >= 10 then 25
-                          when attempt_days_M0 =1 and final_flag='pilot_fake_p1' and to_number(priority) >= 10 then 26
-
-
-                          when attempt_days_M0 is null and to_number(priority) = 2 then 27
-                          when attempt_days_M0 =1 and to_number(priority) = 2 then 28                        
-                          when attempt_days_M0 =2 and to_number(priority) = 2 then 29
-                          when attempt_days_M0 =3 and to_number(priority) = 2 then 30    
-                          when attempt_days_M0 =4 and to_number(priority) = 2 then 31 
-                          when attempt_days_M0 =5 and to_number(priority) = 2 then 32
-                          when attempt_days_M0 =6 and to_number(priority) = 2 then 33
-
-                          when attempt_days_M0 is null and to_number(priority) = 3 then 34
-                          when attempt_days_M0 =1 and to_number(priority) = 3 then 35
-                          when attempt_days_M0 =2 and to_number(priority) = 3 then 36
-                          when attempt_days_M0 =3 and to_number(priority) = 3 then 37
-                          when attempt_days_M0 =4 and to_number(priority) = 3 then 38
-                          when attempt_days_M0 =5 and to_number(priority) = 3 then 39
-                          when attempt_days_M0 =6 and to_number(priority) = 3 then 40
-
-                          when attempt_days_M0 is null and to_number(priority) = 4 then 41
-                          when attempt_days_M0 =1 and to_number(priority) = 4 then 42
-                          when attempt_days_M0 is null and to_number(priority) = 5 then 43
-                          when attempt_days_M0 =1 and to_number(priority) = 5 then 44                   
-                          else 99 end as prior_sec,
-                           VV.*
+                          /* Priority 3 */
+                          when attempt_days_M0 is null and to_number(priority) = 3 then 40
+                          when attempt_days_M0 =1 and to_number(priority) = 3 then 41
+                          when attempt_days_M0 =2 and to_number(priority) = 3 then 42
+                          when attempt_days_M0 =3 and to_number(priority) = 3 then 43
+                          when attempt_days_M0 =4 and to_number(priority) = 3 then 44
+                          when attempt_days_M0 =5 and to_number(priority) = 3 then 45
+                          when attempt_days_M0 =6 and to_number(priority) = 3 then 46
+                          when trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate)) and attempt_days_M0 = 7 and to_number(priority) = 3 then 47
+                          when trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate)) and attempt_days_M0 = 8 and to_number(priority) = 3 then 48
+                          when trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate)) and attempt_days_M0 = 9 and to_number(priority) = 3 then 49
+                          
+                          /* Priority 4 */
+                          when attempt_days_M0 is null and to_number(priority) = 4 then 50
+                          when attempt_days_M0 =1 and to_number(priority) = 4 then 51
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 2 and to_number(priority) = 4 and rbp_segment = 'A' then 52
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 3 and to_number(priority) = 4 and rbp_segment = 'A' then 53
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 4 and to_number(priority) = 4 and rbp_segment = 'A' then 54
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 5 and to_number(priority) = 4 and rbp_segment = 'A' then 55
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 6 and to_number(priority) = 4 and rbp_segment = 'A' then 56
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 7 and to_number(priority) = 4 and rbp_segment = 'A' then 57
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 8 and to_number(priority) = 4 and rbp_segment = 'A' then 58
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 9 and to_number(priority) = 4 and rbp_segment = 'A' then 59
+                          
+                          /* Priority 5 */
+                          when attempt_days_M0 is null and to_number(priority) = 5 then 60
+                          when attempt_days_M0 =1 and to_number(priority) = 5 then 61       
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 2 and to_number(priority) = 5 and rbp_segment = 'A' then 62
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 3 and to_number(priority) = 5 and rbp_segment = 'A' then 63
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 4 and to_number(priority) = 5 and rbp_segment = 'A' then 64
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 5 and to_number(priority) = 5 and rbp_segment = 'A' then 65
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 6 and to_number(priority) = 5 and rbp_segment = 'A' then 66
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 7 and to_number(priority) = 5 and rbp_segment = 'A' then 67
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 8 and to_number(priority) = 5 and rbp_segment = 'A' then 68
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 9 and to_number(priority) = 5 and rbp_segment = 'A' then 69
+                          
+                          /* Priority 6 */
+                          when attempt_days_M0 is null and to_number(priority) = 6 then 70
+                          when attempt_days_M0 =1 and to_number(priority) = 6 then 71       
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 2 and to_number(priority) = 6 and rbp_segment = 'A' then 72
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 3 and to_number(priority) = 6 and rbp_segment = 'A' then 73
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 4 and to_number(priority) = 6 and rbp_segment = 'A' then 74
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 5 and to_number(priority) = 6 and rbp_segment = 'A' then 75
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 6 and to_number(priority) = 6 and rbp_segment = 'A' then 76
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 7 and to_number(priority) = 6 and rbp_segment = 'A' then 77
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 8 and to_number(priority) = 6 and rbp_segment = 'A' then 78
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 9 and to_number(priority) = 6 and rbp_segment = 'A' then 79
+                          
+                          /* Priority 7 */
+                          when attempt_days_M0 is null and to_number(priority) = 7 then 80
+                          when attempt_days_M0 =1 and to_number(priority) = 7 then 81       
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 2 and to_number(priority) = 7 and rbp_segment = 'A' then 82
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 3 and to_number(priority) = 7 and rbp_segment = 'A' then 83
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 4 and to_number(priority) = 7 and rbp_segment = 'A' then 84
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 5 and to_number(priority) = 7 and rbp_segment = 'A' then 85
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 6 and to_number(priority) = 7 and rbp_segment = 'A' then 86
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 7 and to_number(priority) = 7 and rbp_segment = 'A' then 87
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 8 and to_number(priority) = 7 and rbp_segment = 'A' then 88
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 9 and to_number(priority) = 7 and rbp_segment = 'A' then 89
+                          
+                          /* Priority 8 */
+                          when attempt_days_M0 is null and to_number(priority) = 8 then 90
+                          when attempt_days_M0 =1 and to_number(priority) = 8 then 91       
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 2 and to_number(priority) = 8 and rbp_segment = 'A' then 92
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 3 and to_number(priority) = 8 and rbp_segment = 'A' then 93
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 4 and to_number(priority) = 8 and rbp_segment = 'A' then 94
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 5 and to_number(priority) = 8 and rbp_segment = 'A' then 95
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 6 and to_number(priority) = 8 and rbp_segment = 'A' then 96
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 7 and to_number(priority) = 8 and rbp_segment = 'A' then 97
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 8 and to_number(priority) = 8 and rbp_segment = 'A' then 98
+                          when (trunc(sysdate) between to_date(to_char(sysdate,'mm') || '/25/' || to_char(sysdate,'yyyy'),'mm/dd/yyyy') and last_day(trunc(sysdate))) and attempt_days_M0 = 9 and to_number(priority) = 8 and rbp_segment = 'A' then 99
+                          
+                          else 199 end as prior_sec,
+                          VV.*
                       FROM ( SELECT 
                                     CAMP.campaign_id,
                                     CAMP.ID_CUID,
