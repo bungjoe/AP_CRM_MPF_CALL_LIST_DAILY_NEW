@@ -1,0 +1,276 @@
+--------------------------------------------------------
+--  DDL for Procedure AP_MPF_CALL_LIST_DAILY_ASSI
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE PROCEDURE "AP_CRM"."AP_MPF_CALL_LIST_DAILY_ASSI" AS 
+BEGIN 
+/****************************************************************************************************************************
+created by    : Rudi Bahtiar
+created on    : 02-Nov-2015
+subject       : MPF Call List Assignment to Operators 
+
+Tables used   : ap_crm.ID_mpf_call_list_daily_pre    
+              : ap_crm.ID_mpf_call_list_history
+
+List of operators :
+Table       : APP_ACCOUNT.OPS_OPERATORS_MPF 
+
+07.12.2015 (Rudi) : Leads per operartor = 50 (as per Endi request)
+10.12.2015 (Rudi) : Leads per operartor = 75 (as per Endi request)
+14.12.2015 (Robert) : Leads per operartor = 100 (as per Endi request)
+16.12.2015 (Robert) : Leads per operartor = 150 (as per Endi request)
+5.01.2016 (Robert) : Leads per operartor = 125 (as per Endi request)
+10.03.2016 (Rudi) : Leads per operartor = 150 (as per Endi request)
+18.03.2016 (Rudi) : Leads per operartor = 50 (as per Yunita request)
+21.03.2016 (Rudi) : Leads per operartor = 125 (as per Yunita request)
+1.05.2016 (Rrobert) : Total callist capped to 1000, (as per Labib request)
+24.08.2016 (Anggra) : Total callist capped to 1500, (as per Sutrisno request)
+24.10.2016 (Anggra) : Total callist capped to 2000, (as per Sutrisno request)
+******************************************************************************************************************************/
+delete from ap_crm.ID_mpf_call_list_daily;
+
+insert into  ap_crm.ID_mpf_call_list_daily
+with 
+  reduce_call as 
+    (
+    select  'mryandika' oper_id , to_date('02.02.2015','dd.mm.yyyy') valid_from , to_date('04.02.2015', 'dd.mm.yyyy'  )valid_to from dual 
+      union all 
+    select  'yseptian01'  oper_id, to_date('23.01.2015','dd.mm.yyyy') valid_from , to_date('26.01.2015', 'dd.mm.yyyy'  )valid_to  from dual 
+      union all 
+    select  'asetiawan10'  oper_id, to_date('23.01.2015','dd.mm.yyyy') valid_from , to_date('26.01.2015', 'dd.mm.yyyy'  )valid_to  from dual 
+      union all 
+    select  'maryotetuko'  oper_id, to_date('23.01.2015','dd.mm.yyyy') valid_from , to_date('26.01.2015', 'dd.mm.yyyy'  )valid_to  from dual 
+    ),
+  op_c as( 
+        select count(1) op_count from APP_ACCOUNT.OPS_OPERATORS_MPF o
+    ), 
+  rnd_gen as 
+    ( select op_c.op_count, mod(to_number(to_char(trunc(sysdate) , 'dd')), op_c.op_count) +1  rn
+       -- trunc(dbms_random.value(1, op_c.op_count)) rn
+       from op_c
+    ), 
+  un as
+  (
+    select 
+      case 
+        when ord > rnd 
+          then ord - rnd + 1 
+        when ord < rnd 
+          then op_count - rnd + ord +1
+          else 1 
+      end rule_ord,
+      v.* 
+    from 
+    (
+      select
+        row_number() over (order by o.dtime_inserted) ord, 
+        first_value(rnd_gen.rn) over () rnd, 
+        o.operator_name, 
+        o.operator_id, 
+        rnd_gen.op_count
+      from APP_ACCOUNT.OPS_OPERATORS_MPF o, rnd_gen
+    ) v 
+  ),
+  called as
+  (
+    select /*+ MATERIALIZE USE_HASH (cont vhd cl vhc) */ cl.cuid, cont.contract_code from OWNER_INT.VH_HOM_COMMUNICATION_RECORD vhc
+    left join OWNER_INT.VH_HOM_CONTRACT cont on vhc.contract_id = cont.id
+    left join owner_int.vh_hom_deal vhd on cont.deal_id = vhd.id
+    left join OWNER_INT.VH_HOM_CLIENT cl on vhd.client_id = cl.id
+    where 1=1 
+    and channel_code = 'OC'
+    and type_code like 'MPF%'
+    and SUBTYPE_CODE = 'MPF_TLSO_OFF'
+    and RESULT_TYPE_CODE like 'CLC%'
+    and trunc(vhc.creation_date) = trunc(sysdate)
+  ),
+  base_assi as 
+  (
+    select 
+      row_number() over (order by follow_up, order_no) ord_n, 
+      d.*
+    from ap_crm.ID_mpf_call_list_daily_pre d
+    where not (d.mobile1 is null and d.mobile2 is null)
+    -- and cuid not in (SELECT CUID FROM ID_MPF_CALL_LIST_HISTORY WHERE TRUNC(REP_DATE)='07-DEC-15')
+    and cuid not in (select cuid from called)
+  ),
+  rule_k as 
+  (
+    select 
+      op_c.*,
+      mod(ass.ord_n, op_c.op_count ) +1 rule_key,
+      ass.*  
+    from base_assi ass, op_c 
+  ), 
+  sms as 
+  (
+    select 
+      h.cuid, 
+      sum(h.sms_to_send) sms, 
+      count(1) called_days  
+    from  ap_crm.ID_mpf_call_list_history  h
+    where h.rep_date between  add_months( last_day( trunc(sysdate)) , -1) +1 and trunc(sysdate) -1
+--    where h.rep_date between  add_months( last_day( trunc(sysdate)) , -1) +1 and trunc(sysdate)
+
+    group by  h.cuid
+  )
+
+
+select 
+  CUID,
+  CONTRACT_ID,
+  FULL_NAME,
+    FIRST_NAME,
+    LAST_NAME,
+    MAX_CREDIT_AMOUNT,
+    MAX_INSTALMENT,
+
+  MOTHER_MAIDEN_NAME,
+    PLACE_OF_BIRTH,
+    BIRTH_DATE,
+    ID_KTP,
+    EXPIRY_DATE_KTP,
+  MOBILE1,
+  MOBILE2,
+    EMAIL_ADDRESS,
+  FATHER_PHONE,
+  MOTHER_PHONE,
+  SPOUSE_PHONE,
+  HOME_PHONE,
+  EMPLOYER_PHONE,
+  FULL_ADDRESS,
+  NAME_TOWN,
+  NAME_SUBDISTRICT,
+  CODE_ZIP_CODE,
+  NAME_DISTRICT,
+  NAME_SALESROOM,
+  NAME_CREDIT_STATUS,
+  DATE_PROMISE,
+  FOLLOW_UP,
+  SMS_TO_SEND,
+  OPERATOR_ASSIGNED,
+  OPERATOR_ID,
+  PROMISE_TIME,
+  PROMISE_TEXT_TIME
+  ,INFO1
+  ,INFO2
+  ,null FOLLOW_UP_DATE
+  ,null NOTES
+  ,'DFT' TZONE
+  , PRIORITY
+from 
+(
+  select 
+    k.CUID,
+    CONTRACT_ID,
+    FULL_NAME,
+    FIRST_NAME,
+    LAST_NAME,
+    MAX_CREDIT_AMOUNT,
+    MAX_INSTALMENT,
+    MOTHER_MAIDEN_NAME,
+    PLACE_OF_BIRTH,
+    BIRTH_DATE,
+    ID_KTP,
+    EXPIRY_DATE_KTP,
+    MOBILE1,
+    MOBILE2,
+    EMAIL_ADDRESS,
+    FATHER_PHONE,
+    MOTHER_PHONE,
+    SPOUSE_PHONE,
+    HOME_PHONE,
+    EMPLOYER_PHONE,
+    FULL_ADDRESS,
+    NAME_TOWN,
+    NAME_SUBDISTRICT,
+    CODE_ZIP_CODE,
+    NAME_DISTRICT,
+    NAME_SALESROOM,
+    NAME_CREDIT_STATUS,
+    DATE_PROMISE,
+    FOLLOW_UP,
+    case 
+      when nvl(sms.sms, 0) = 0 and trunc(sysdate) >= to_date('29.12.2014', 'dd.mm.yyyy') and mobile1 is not null 
+        then 1 
+        else 0 
+      end SMS_TO_SEND,
+    OPERATOR_NAME  as OPERATOR_ASSIGNED,
+    OPERATOR_ID, 
+    PROMISE_TIME,
+    PROMISE_TEXT_TIME
+    , INFO1
+    , INFO2
+    , rc.*
+    , row_number() over (partition by un.operator_id order by k.ord_n) oper_order
+
+    /***************************** percent to assign from standard download per operator  *****************************************************/
+    , case 
+      when mod( row_number() over (partition by un.operator_id order by k.ord_n) , 10) in (/**/5, 6,7,8,9)  
+        and rc.oper_id is not null and trunc(sysdate) between rc.valid_from and rc.valid_to
+          then 'N' 
+          else 'Y' 
+      end to_call, 
+      k.priority
+  from rule_k k 
+  join  un on un.rule_ord = k.rule_key 
+  left join sms on sms.cuid = k.cuid
+  left join reduce_call  rc on rc.oper_id = un.operator_id
+  where k.ord_n <= 12000--k.op_count * 125    /**************************** leads per operator *************************************/
+
+  -- next all holiday Telesales should be maintained in table (ap_crm.setting_holiday)
+  and trunc(sysdate) not in (select distinct(holiday_date) from ap_crm.setting_holiday where type='Telesales')
+  order by k.ord_n 
+) 
+where to_call = 'Y';
+
+commit;
+
+insert into  ap_crm.ID_mpf_call_list_history 
+select 
+  trunc(sysdate) rep_date, 
+  CUID,
+  CONTRACT_ID,
+  FULL_NAME,
+  FIRST_NAME,
+  LAST_NAME,
+  MAX_CREDIT_AMOUNT,
+  MAX_INSTALMENT,
+  MOTHER_MAIDEN_NAME,
+  PLACE_OF_BIRTH,
+  BIRTH_DATE,
+  ID_KTP,
+  EXPIRY_DATE_KTP,
+  MOBILE1,
+  MOBILE2,
+  EMAIL_ADDRESS,
+  FATHER_PHONE,
+  MOTHER_PHONE,
+  SPOUSE_PHONE,
+  HOME_PHONE,
+  EMPLOYER_PHONE,
+  FULL_ADDRESS,
+  NAME_TOWN,
+  NAME_SUBDISTRICT,
+  CODE_ZIP_CODE,
+  NAME_DISTRICT,
+  NAME_SALESROOM,
+  NAME_CREDIT_STATUS,
+  DATE_PROMISE,
+  FOLLOW_UP,
+  FOLLOW_UP_DATE,
+  SMS_TO_SEND,
+  OPERATOR_ASSIGNED,
+  OPERATOR_ID,
+  INFO1,
+  INFO2,
+  NOTES,
+  TZONE,
+  PRIORITY
+from ap_crm.ID_mpf_call_list_daily d;
+
+commit;
+
+end ap_mpf_call_list_daily_assi;
+/
