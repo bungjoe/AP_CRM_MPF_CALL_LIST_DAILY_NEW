@@ -1,0 +1,1259 @@
+--------------------------------------------------------
+--  DDL for Procedure AP_CRM_MPF_CALL_LIST_DAILY_NEW
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE PROCEDURE "AP_CRM"."AP_CRM_MPF_CALL_LIST_DAILY_NEW" 
+/*******************************************changes **************************************************************
+campaign_type : TBA (from RISK)
+  Table       : AP_RISK.DCT_CAMP_LIST
+  Fields      : campaign_type         = 'mpf'
+product code  : TBA
+  Table       : OWNER_DWH.f_communication_record_tt
+  Fields      : code_type_code        = 'mpf'
+
+  12-Jan-16 (robert)  : Filter out cuid that already have mpf contrat created in running month (m0)
+  28-Jan-16 (robert)  : Remove filter only priority 1 - 6 from campaign, and only 1 day attempt, add priority information
+  19-Mar-16 (rudi)    : Enable Saturday to produce Call List
+  24-Mar-16 (rudi)    : Change to AP_OPS.TELESALES_EMPLOYEE_LIST
+  08-Apr-16 (rudi)    : Exclude CUID from SMS_BLAST on current month
+  02-May-16 (Robert)  : Exclude CUID from ap_risk.eligibilility_daily_check with FLAG_STILL_ELIGIBLE='N' for current month
+  17-May-16 (Robert)  : Comment Exclude CUID from SMS_BLAST on current month,
+                        Change days attempt from 2 to 3
+  16-Jun-16 (Robert)  : Change credit amt to 5mn and eliminate credit amount in sorting priority
+  17-Jun-16 (Robert)  : change to priority_new
+  23-Jun-16 (Robert)  : incude sunday in call list
+  24-Jun-16 (Anggra)  : change criteria priority_new
+  24-Aug-16 (Anggra)  : increase limit to 7 mn
+  02-Sep-16 (Anggra)  : change priority order by scoring
+  24-Oct-16 (Anggra)  : increase call list to 2000 per day
+  18-Jan-17 (Anggra)  : add additional logic to avoid calling people for more than 3 times
+  28-Feb-17 (Joe)     : change reference from AP_RISK.DCT_CAMP_LIST to AP_RISK.ELIGIBILITY_BASE on producing GTT_CAMP1
+  21-Mar-17 (Joe)     : Added column of code religion to GTT_CAMP_1
+                        Added sub routine to exclude people with Hindu religion from 28th March Calling list
+******************************************************************************************************************/
+  AS
+--  Calculate statistics
+  PROCEDURE pStats( acTable VARCHAR2, anPerc NUMBER DEFAULT 0.01)
+    IS
+  BEGIN
+    AP_PUBLIC.CORE_LOG_PKG.pStart( 'Stat:'||acTable );
+    DBMS_STATS.Gather_Table_Stats( OwnName => 'AP_CRM', TabName => acTable,Estimate_Percent => anPerc );
+    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  END ;
+  --  Truncate table
+  PROCEDURE pTruncate( acTable VARCHAR2)
+    IS
+  BEGIN
+    AP_PUBLIC.CORE_LOG_PKG.pStart( 'Trunc:'||acTable );
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE AP_CRM.'||acTable ;
+    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  END ;
+  PROCEDURE pAlterSession( anParallel INTEGER )
+    IS
+  BEGIN
+    AP_PUBLIC.CORE_LOG_PKG.pStart( 'Init parallel :'||anParallel );
+    EXECUTE IMMEDIATE 'ALTER SESSION FORCE PARALLEL DML PARALLEL '||anParallel ;
+    EXECUTE IMMEDIATE 'ALTER SESSION FORCE PARALLEL QUERY PARALLEL '||anParallel ;
+    EXECUTE IMMEDIATE 'ALTER SESSION SET WORKAREA_SIZE_POLICY = MANUAL' ;
+    EXECUTE IMMEDIATE 'ALTER SESSION SET SORT_AREA_SIZE = 1073741824' ;
+    EXECUTE IMMEDIATE 'ALTER SESSION SET HASH_AREA_SIZE = 1073741824' ;
+    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  END ;
+BEGIN
+  AP_PUBLIC.CORE_LOG_PKG.pInit('AP_CRM','AP_CRM_MPF_CALL_LIST_DAILY_NEW'); --AP_CRM_CALL_PRE_TEST -- NAME OF PROCEDURE
+
+  /*CREATE GLOBAL TEMPORARY TABLE GTT_COMM_REC
+  ON COMMIT PRESERVE ROWS
+  AS
+  SELECT SKP_CLIENT
+       , CODE_STATUS
+       , DTIME_INSERTED
+       , CODE_SUBTYPE
+       , CODE_TYPE_CODE
+       , CODE_RESULT_TYPE
+       , DATE_CALL
+       , SKP_COMMUNICATION_RESULT_TYPE
+       , SKP_COMMUNICATION_STATUS
+       , SKF_COMMUNICATION_RECORD
+       , TEXT_NOTE
+       , TEXT_CONTACT
+    FROM OWNER_DWH.F_COMMUNICATION_RECORD_TT
+    WHERE 1 = 0 ;*/
+
+  pTruncate('GTT_COMM_REC');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_COMM_REC' ) ;
+  INSERT /*+APPEND*/ INTO GTT_COMM_REC
+  /*SELECT SKP_CLIENT
+       , CODE_STATUS
+       , DTIME_INSERTED
+       , CODE_SUBTYPE
+       , CODE_TYPE_CODE
+       , CODE_RESULT_TYPE
+       , DATE_CALL
+       , SKP_COMMUNICATION_RESULT_TYPE
+       , SKP_COMMUNICATION_STATUS
+       , SKF_COMMUNICATION_RECORD
+       , TEXT_NOTE
+       , TEXT_CONTACT
+    FROM OWNER_DWH.F_COMMUNICATION_RECORD_TT; */
+
+     with commlist as
+    (
+      SELECT SKP_CLIENT
+           , to_char(CODE_STATUS) as CODE_STATUS
+           , DTIME_INSERTED
+           , to_char(CODE_SUBTYPE) as CODE_SUBTYPE
+           , to_char(CODE_TYPE_CODE) as CODE_TYPE_CODE
+           , to_char(CODE_RESULT_TYPE) as CODE_RESULT_TYPE
+           , DATE_CALL
+           , to_char(SKP_COMMUNICATION_RESULT_TYPE) as SKP_COMMUNICATION_RESULT_TYPE
+           , to_char(SKP_COMMUNICATION_STATUS) as SKP_COMMUNICATION_STATUS
+           , to_char(SKF_COMMUNICATION_RECORD) as SKF_COMMUNICATION_RECORD
+           , to_char(TEXT_NOTE) as TEXT_NOTE
+           , to_char(TEXT_CONTACT) as TEXT_CONTACT
+        FROM OWNER_DWH.F_COMMUNICATION_RECORD_TT
+        WHERE TRUNC(DATE_CALL) > ADD_MONTHS(TRUNC(SYSDATE), -12)
+    ),
+    caf as 
+    (
+    select  dc.SKP_CLIENT
+           , '' as CODE_STATUS 
+           , trunc(to_date(caf.date_camp)) as DTIME_INSERTED
+           , '' as CODE_SUBTYPE
+           , '' as CODE_TYPE_CODE
+           , '' as CODE_RESULT_TYPE
+           , trunc(to_date(caf.date_camp)) as DATE_CALL
+           , '' as SKP_COMMUNICATION_RESULT_TYPE
+           , '' as SKP_COMMUNICATION_STATUS
+           , '' as SKF_COMMUNICATION_RECORD
+           , '' as TEXT_NOTE
+           , '' as TEXT_CONTACT
+        from ap_crm.caf3 caf
+        left join owner_dwh.dc_client dc on caf.record_field_1=dc.id_cuid
+        WHERE trunc(to_date(caf.date_camp)) > ADD_MONTHS(TRUNC(SYSDATE), -12)
+        )    
+    select caf.*
+    from caf 
+    left join commlist cl on cl.skp_client=caf.skp_client and trunc(to_date(caf.date_call))=trunc(cl.date_call)
+    where cl.skp_client is null
+    union
+    select * from  commlist;
+
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_COMM_REC');
+
+  /*CREATE GLOBAL TEMPORARY TABLE GTT_CONTRACT_AD
+  ON COMMIT PRESERVE ROWS
+  AS
+  SELECT DTIME_SIGNATURE_CONTRACT
+       , AMT_OUTSTANDING_TOTAL
+       , AMT_OUTSTANDING_PRINCIPAL
+       , AMT_OUTSTANDING_INTEREST
+       , CNT_INSTALMENT
+       , CNT_INST_TOTAL_UNPAID
+       , CNT_DAYS_PAST_DUE_TOLERANCE
+       , SKP_CREDIT_CASE
+       , SKP_CLIENT
+       , TEXT_CONTRACT_NUMBER
+    FROM OWNER_DWH.F_CONTRACT_AD
+    WHERE 1 = 0 ;*/
+
+  pTruncate('GTT_CONTRACT_AD');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_CONTRACT_AD' ) ;
+  INSERT /*+APPEND*/ INTO GTT_CONTRACT_AD
+  SELECT DTIME_SIGNATURE_CONTRACT
+       , AMT_OUTSTANDING_TOTAL
+       , AMT_OUTSTANDING_PRINCIPAL
+       , AMT_OUTSTANDING_INTEREST
+       , CNT_INSTALMENT
+       , CNT_INST_TOTAL_UNPAID
+       , CNT_DAYS_PAST_DUE_TOLERANCE
+       , SKP_CREDIT_CASE
+       , SKP_CLIENT
+       , TEXT_CONTRACT_NUMBER
+    FROM OWNER_DWH.F_CONTRACT_AD;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_CONTRACT_AD');
+  /*CREATE GLOBAL TEMPORARY TABLE GTT_CRED_CASE
+  ON COMMIT PRESERVE ROWS
+  AS
+  SELECT SKP_CREDIT_CASE
+       , SKP_CREDIT_STATUS
+       , TEXT_CONTRACT_NUMBER
+       , DATE_DECISION
+       , SKP_CLIENT
+       , SKP_CONTRACT
+       , SKP_SALESROOM
+    FROM OWNER_DWH.DC_CREDIT_CASE
+    WHERE 1 = 0 ;*/
+
+  pTruncate('GTT_CRED_CASE');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_CRED_CASE' ) ;
+  INSERT /*+APPEND*/ INTO GTT_CRED_CASE
+  SELECT SKP_CREDIT_CASE
+       , SKP_CREDIT_STATUS
+       , TEXT_CONTRACT_NUMBER
+       , DATE_DECISION
+       , SKP_CLIENT
+       , SKP_CONTRACT
+       , SKP_SALESROOM
+    FROM OWNER_DWH.DC_CREDIT_CASE;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_CRED_CASE');
+
+  /*CREATE GLOBAL TEMPORARY TABLE GTT_APPL_BASE
+  ON COMMIT PRESERVE ROWS
+  AS
+  SELECT SKP_CREDIT_CASE
+       , SKP_SALESROOM
+       , SKP_CLIENT
+       , NAME_GOODS_CATEGORY
+       , AMT_CREDIT_TOTAL
+    FROM OWNER_DWH.F_APPLICATION_BASE_TT
+    WHERE 1 = 0 ;*/
+
+  pTruncate('GTT_APPL_BASE');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_APPL_BASE' ) ;
+  INSERT /*+APPEND*/ INTO GTT_APPL_BASE
+  SELECT SKP_CREDIT_CASE
+       , SKP_SALESROOM
+       , SKP_CLIENT
+       , NAME_GOODS_CATEGORY
+       , AMT_CREDIT_TOTAL
+    FROM OWNER_DWH.F_APPLICATION_BASE_TT;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_APPL_BASE');
+
+  /*CREATE GLOBAL TEMPORARY TABLE GTT_SCOR_VCT
+  ON COMMIT PRESERVE ROWS
+  AS
+  SELECT FV.SKP_CREDIT_CASE,
+        '1' AS FLAG
+    FROM OWNER_DWH.F_SCORING_VECTOR_TT         FV
+    JOIN OWNER_DWH.DC_SCORING_VECTOR_ATTRIBUTE DV ON FV.SKP_SCORING_VECTOR_ATTRIBUTE = DV.SKP_SCORING_VECTOR_ATTRIBUTE
+    JOIN GTT_APPL_BASE                         FC ON FV.SKP_CREDIT_CASE              = FC.SKP_CREDIT_CASE
+    LEFT JOIN OWNER_DWH.DC_SALESROOM           DS ON FC.SKP_SALESROOM                = DS.SKP_SALESROOM
+    WHERE 1 = 0 ;*/
+
+  pTruncate('GTT_SCOR_VCT');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_SCOR_VCT' ) ;
+  INSERT /*+APPEND*/ INTO GTT_SCOR_VCT
+  SELECT FV.SKP_CREDIT_CASE,
+        '1' AS FLAG
+    FROM OWNER_DWH.F_SCORING_VECTOR_TT         FV
+    JOIN OWNER_DWH.DC_SCORING_VECTOR_ATTRIBUTE DV ON FV.SKP_SCORING_VECTOR_ATTRIBUTE = DV.SKP_SCORING_VECTOR_ATTRIBUTE
+    JOIN GTT_APPL_BASE                         FC ON FV.SKP_CREDIT_CASE              = FC.SKP_CREDIT_CASE
+    LEFT JOIN OWNER_DWH.DC_SALESROOM           DS ON FC.SKP_SALESROOM                = DS.SKP_SALESROOM
+    WHERE DV.TEXT_VECTOR_ATTR_FULL_PATH IN ('credit.isBidProduct')--,'prelim1Result.strategyName')
+      AND DS.NAME_SALESROOM NOT LIKE '%HCI_S%'
+      AND FV.TEXT_VALUE = 'true'
+    GROUP BY FV.SKP_CREDIT_CASE ;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_SCOR_VCT');
+
+  /*CREATE GLOBAL TEMPORARY TABLE GTT_CAMP_1 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT C.*
+       , DL.SKP_CLIENT
+       , SC.PRIORITY_NEW
+       , CASE WHEN DL.NAME_MIDDLE = 'XNA' THEN DL.NAME_FIRST||' '||DL.NAME_LAST
+                                          ELSE DL.NAME_FIRST||' '||DL.NAME_MIDDLE||' '||DL.NAME_LAST
+         END AS FULL_NAME
+       , DL.NAME_FIRST FIRSTNAME, DL.NAME_LAST LASTNAME
+       , DL.NAME_MOTHER
+       , DL.DATE_BIRTH
+       , DL.NAME_BIRTH_PLACE PLACE_BIRTH
+       , FAM.CODE_FAMILY_STATUS
+       , CONT.NAME_CREDIT_STATUS
+    FROM AP_RISK.DCT_CAMP_LIST  C
+    JOIN OWNER_DWH.DC_CLIENT DL ON C.ID_CUID = DL.ID_CUID
+    LEFT JOIN OWNER_DWH.DC_CLIENT DC ON DC.ID_CUID = C.ID_CUID
+    LEFT JOIN OWNER_DWH.CL_FAMILY_STATUS FAM ON DC.SKP_FAMILY_STATUS = FAM.SKP_FAMILY_STATUS
+    LEFT JOIN ( SELECT ID_CUID, PRIORITY_NEW FROM AP_CRM.TBL_SCORE) SC ON C.ID_CUID=SC.ID_CUID
+    LEFT JOIN ( SELECT  ID_CUID,
+                        TEXT_CONTRACT_NUMBER,
+                        NAME_CREDIT_STATUS,
+                        AMT_CREDIT,
+                        GOODS_CATEGORY,
+                        SIGN_DATE,
+                        AMT_OUTSTANDING,
+                        AMT_OUTSTANDING_PRINCIPAL,
+                        AMT_OUTSTANDING_INTEREST,
+                        TENOR,
+                        REMAINING_TENOR,
+                        DPD_TOLERANCE
+                  FROM ( SELECT DISTINCT DC.ID_CUID,
+                                DCC.TEXT_CONTRACT_NUMBER,
+                                CS.NAME_CREDIT_STATUS,
+                                CCR.AMT_CREDIT_TOTAL AS AMT_CREDIT,
+                                CCR.NAME_GOODS_CATEGORY AS GOODS_CATEGORY,
+                                CA.DTIME_SIGNATURE_CONTRACT AS SIGN_DATE,
+                                CA.AMT_OUTSTANDING_TOTAL AS "AMT_OUTSTANDING",
+                                CA.AMT_OUTSTANDING_PRINCIPAL AS "AMT_OUTSTANDING_PRINCIPAL",
+                                CA.AMT_OUTSTANDING_INTEREST AS "AMT_OUTSTANDING_INTEREST",
+                                CA.CNT_INSTALMENT AS "TENOR",
+                                CA.CNT_INST_TOTAL_UNPAID AS "REMAINING_TENOR",
+                                CA.CNT_DAYS_PAST_DUE_TOLERANCE AS "DPD_TOLERANCE",
+                                ROW_NUMBER() OVER (PARTITION BY DC.ID_CUID ORDER BY CA.DTIME_SIGNATURE_CONTRACT DESC) AS ROWN
+                           FROM GTT_APPL_BASE                  CCR
+                           LEFT JOIN OWNER_DWH.DC_CLIENT        DC ON CCR.SKP_CLIENT         = DC.SKP_CLIENT
+                           LEFT JOIN GTT_CONTRACT_AD               CA ON CCR.SKP_CREDIT_CASE = CA.SKP_CREDIT_CASE
+                           LEFT JOIN GTT_CRED_CASE              CC ON CC.SKP_CREDIT_CASE     = CCR.SKP_CREDIT_CASE
+                           LEFT JOIN OWNER_DWH.CL_CREDIT_STATUS CS ON CS.SKP_CREDIT_STATUS   = CC.SKP_CREDIT_STATUS
+                           LEFT JOIN GTT_CRED_CASE             DCC ON CCR.SKP_CREDIT_CASE    = DCC.SKP_CREDIT_CASE
+                           LEFT JOIN GTT_SCOR_VCT               XF ON XF.SKP_CREDIT_CASE     = CCR.SKP_CREDIT_CASE
+                           WHERE 1=0
+                        )
+                  WHERE ROWN = 1
+               ) CONT ON CONT.ID_CUID = C.ID_CUID
+    WHERE TRUNC(SYSDATE) BETWEEN TRUNC(C.DATE_VALID_FROM) AND TRUNC(C.DATE_VALID_TO) -- to_date('01.01.2015','dd.mm.yyyy') campaign_id='1608'
+      AND FLOOR(MONTHS_BETWEEN(TRUNC(SYSDATE),DL.DATE_BIRTH)/12) >= CASE WHEN DL.SKP_FAMILY_STATUS = 1 THEN 21
+                                                                         WHEN DL.SKP_FAMILY_STATUS IN (2,3,4)THEN 19
+                                                                    END
+      AND C.CAMPAIGN_TYPE = 'mpf'
+      AND C.SID_RESULT = 'SID_OK'
+      AND C.ID_CUID NOT IN (SELECT ID_CUID FROM AP_RISK.ELIGIBILILITY_DAILY_CHECK WHERE FLAG_STILL_ELIGIBLE='N' AND TRUNC(SYSDATE) BETWEEN TRUNC(DATE_VALID_FROM) AND TRUNC(DATE_VALID_TO))
+      AND C.ID_CUID NOT IN ( SELECT ID_CUID FROM AP_CRM.DO_NOT_CONTACT );
+
+      truncate table "AP_CRM"."GTT_CAMP_1";
+      drop table "AP_CRM"."GTT_CAMP_1";
+      CREATE GLOBAL TEMPORARY TABLE "AP_CRM"."GTT_CAMP_1" 
+      (	
+          "CAMPAIGN_ID" VARCHAR2(4 BYTE), 
+          "ID_CUID" NUMBER(38,0), 
+          "MAX_CREDIT_AMOUNT" NUMBER(19,2), 
+          "MAX_ANNUITY" NUMBER(19,2), 
+          "VALIDITY_PERIOD" VARCHAR2(4 BYTE), 
+          "DPD_HISTORY" NUMBER(38,0), 
+          "DPD_12_MS" NUMBER(38,0), 
+          "DPD_3_MS" NUMBER(38,0), 
+          "TYPE" VARCHAR2(10 CHAR), 
+          "PRIORITY" VARCHAR2(4 BYTE), 
+          "CAMPAIGN_TYPE" VARCHAR2(10 BYTE), 
+          "DATE_VALID_FROM" DATE, 
+          "DATE_VALID_TO" DATE, 
+          "SID_RESULT" VARCHAR2(15 BYTE), 
+          "SCORE" NUMBER, 
+          "RISK_GROUP" VARCHAR2(15 BYTE), 
+          "RBP_SEGMENT" VARCHAR2(20 BYTE), 
+          "SKP_CLIENT" NUMBER(*,0), 
+          "PRIORITY_NEW" NUMBER, 
+          "FULL_NAME" VARCHAR2(272 CHAR), 
+          "FIRSTNAME" VARCHAR2(90 CHAR), 
+          "LASTNAME" VARCHAR2(90 CHAR), 
+          "NAME_MOTHER" VARCHAR2(90 CHAR), 
+          "DATE_BIRTH" DATE, 
+          "PLACE_BIRTH" VARCHAR2(255 CHAR), 
+          "CODE_FAMILY_STATUS" VARCHAR2(30 CHAR), 
+          "NAME_CREDIT_STATUS" VARCHAR2(255 CHAR), 
+          "FINAL_FLAG" VARCHAR2(25 BYTE),
+          "CODE_RELIGION" VARCHAR2(40 BYTE)
+       ) ON COMMIT PRESERVE ROWS ;
+      CREATE INDEX "AP_CRM"."GTT_CAMP_IX01" ON "AP_CRM"."GTT_CAMP_1" ("SKP_CLIENT") ;
+      CREATE INDEX "AP_CRM"."GTT_CAMP_IX02" ON "AP_CRM"."GTT_CAMP_1" ("ID_CUID") ;
+      ALTER TABLE "AP_CRM"."GTT_CAMP_1" MODIFY ("SKP_CLIENT" NOT NULL ENABLE);
+      ALTER TABLE "AP_CRM"."GTT_CAMP_1" MODIFY ("FIRSTNAME" NOT NULL ENABLE);
+      ALTER TABLE "AP_CRM"."GTT_CAMP_1" MODIFY ("LASTNAME" NOT NULL ENABLE);
+      ALTER TABLE "AP_CRM"."GTT_CAMP_1" MODIFY ("NAME_MOTHER" NOT NULL ENABLE);
+      ALTER TABLE "AP_CRM"."GTT_CAMP_1" MODIFY ("DATE_BIRTH" NOT NULL ENABLE);
+      ALTER TABLE "AP_CRM"."GTT_CAMP_1" MODIFY ("PLACE_BIRTH" NOT NULL ENABLE);
+
+
+      */
+
+  pTruncate('GTT_CAMP_1');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_CAMP_1' ) ;
+  INSERT /*+APPEND*/ INTO GTT_CAMP_1
+  select /*+ USE_HASH (DL CL FAM SC PL CONT C) */
+  to_char(trunc(cl.valid_from), 'yymm')CAMPAIGN_ID
+  --CL.CAMPAIGN_ID
+  , CL.ID_CUID
+  --, C.AMT_CREDIT_MAX AS MAX_CREDIT_AMOUNT
+  , CL.CA_LIMIT_FINAL_UpDATED AS MAX_CREDIT_AMOUNT
+  , CL.annuity_limit_final_updated AS MAX_ANNUITY
+  --, C.AMT_ANNUITY_MAX AS MAX_ANNUITY
+  , null VALIDITY_PERIOD
+  --, CL.VALIDITY_PERIOD
+  , null DPD_HISTORY
+  --, CL.DPD_HISTORY
+  , null DPD_12_MS
+  --, CL.DPD_12_MS
+  , null DPD_3_MS
+  --, CL.DPD_3_MS
+  --, CL.TYPE
+  ,null TYPE
+  , CL.PRIORITY_ACTUAL PRIORITY
+  , CL.CAMP_TYPE CAMPAIGN_TYPE
+  , CL.VALID_FROM DATE_VALID_FROM
+  , CL.VALID_TO DATE_VALID_TO
+  , CL.SID_RESULT
+  , CL.SCORE
+  , CL.RISK_BAND RISK_GROUP
+  , CL.RBP_SEGMENT_TEMP RBP_SEGMENT
+  , C.SKP_CLIENT
+  , SC.PRIORITY_NEW
+  , CASE WHEN DL.NAME_MIDDLE = 'XNA' THEN DL.NAME_FIRST||' '||DL.NAME_LAST
+    ELSE DL.NAME_FIRST||' '||DL.NAME_MIDDLE||' '||DL.NAME_LAST
+           END AS FULL_NAME
+         , DL.NAME_FIRST FIRSTNAME
+         , DL.NAME_LAST LASTNAME
+         , DL.NAME_MOTHER
+         , DL.DATE_BIRTH
+         , DL.NAME_BIRTH_PLACE PLACE_BIRTH
+         , FAM.CODE_FAMILY_STATUS
+         , CONT.NAME_CREDIT_STATUS
+         , PL.FINAL_FLAG
+         , DL.CODE_RELIGION
+  from owner_dwh.f_campaign_client_at C
+  LEFT JOIN OWNER_DWH.DC_CLIENT DL ON C.SKP_CLIENT = DL.SKP_CLIENT
+  --LEFT JOIN AP_RISK.DCT_CAMP_LIST CL ON CL.ID_CUID=DL.ID_CUID AND TRUNC(SYSDATE) BETWEEN TRUNC(CL.DATE_VALID_FROM) AND TRUNC(CL.DATE_VALID_TO)
+  left join ap_risk.eligibility_base cl on cl.id_cuid = dl.id_cuid and trunc(sysdate) between trunc(cl.valid_from) and trunc(cl.valid_to)
+  LEFT JOIN OWNER_DWH.CL_FAMILY_STATUS FAM ON DL.SKP_FAMILY_STATUS = FAM.SKP_FAMILY_STATUS
+  LEFT JOIN ( SELECT ID_CUID, PRIORITY_NEW FROM AP_CRM.TBL_SCORE) SC ON CL.ID_CUID=SC.ID_CUID
+  LEFT JOIN AP_CRM.DCT_CAMP_LIST_PILOT_1703 PL ON CL.ID_CUID=PL.ID_CUID
+  LEFT JOIN ( SELECT  ID_CUID,
+                        TEXT_CONTRACT_NUMBER,
+                        NAME_CREDIT_STATUS,
+                        AMT_CREDIT,
+                        GOODS_CATEGORY,
+                        SIGN_DATE,
+                        AMT_OUTSTANDING,
+                        AMT_OUTSTANDING_PRINCIPAL,
+                        AMT_OUTSTANDING_INTEREST,
+                        TENOR,
+                        REMAINING_TENOR,
+                        DPD_TOLERANCE
+                  FROM ( SELECT DISTINCT DC.ID_CUID,
+                                DCC.TEXT_CONTRACT_NUMBER,
+                                CS.NAME_CREDIT_STATUS,
+                                CCR.AMT_CREDIT_TOTAL AS AMT_CREDIT,
+                                CCR.NAME_GOODS_CATEGORY AS GOODS_CATEGORY,
+                                CA.DTIME_SIGNATURE_CONTRACT AS SIGN_DATE,
+                                CA.AMT_OUTSTANDING_TOTAL AS "AMT_OUTSTANDING",
+                                CA.AMT_OUTSTANDING_PRINCIPAL AS "AMT_OUTSTANDING_PRINCIPAL",
+                                CA.AMT_OUTSTANDING_INTEREST AS "AMT_OUTSTANDING_INTEREST",
+                                CA.CNT_INSTALMENT AS "TENOR",
+                                CA.CNT_INST_TOTAL_UNPAID AS "REMAINING_TENOR",
+                                CA.CNT_DAYS_PAST_DUE_TOLERANCE AS "DPD_TOLERANCE",
+                                ROW_NUMBER() OVER (PARTITION BY DC.ID_CUID ORDER BY CA.DTIME_SIGNATURE_CONTRACT DESC) AS ROWN
+                           FROM GTT_APPL_BASE                  CCR
+                           LEFT JOIN OWNER_DWH.DC_CLIENT        DC ON CCR.SKP_CLIENT         = DC.SKP_CLIENT
+                           LEFT JOIN GTT_CONTRACT_AD               CA ON CCR.SKP_CREDIT_CASE = CA.SKP_CREDIT_CASE
+                           LEFT JOIN GTT_CRED_CASE              CC ON CC.SKP_CREDIT_CASE     = CCR.SKP_CREDIT_CASE
+                           LEFT JOIN OWNER_DWH.CL_CREDIT_STATUS CS ON CS.SKP_CREDIT_STATUS   = CC.SKP_CREDIT_STATUS
+                           LEFT JOIN GTT_CRED_CASE             DCC ON CCR.SKP_CREDIT_CASE    = DCC.SKP_CREDIT_CASE
+                           LEFT JOIN GTT_SCOR_VCT               XF ON XF.SKP_CREDIT_CASE     = CCR.SKP_CREDIT_CASE
+                           WHERE 1=0
+                        )
+                  WHERE ROWN = 1
+               ) CONT ON CONT.ID_CUID = CL.ID_CUID
+  WHERE TRUNC(C.DATE_VALID_FROM) =  ADD_MONTHS(LAST_DAY(TRUNC(SYSDATE)), -1) +1  --between '28-DEC-16' and '18-JAN-17'
+  AND TRUNC(C.DATE_VALID_TO)= LAST_DAY(TRUNC(SYSDATE))+8
+  AND FLOOR(MONTHS_BETWEEN(TRUNC(SYSDATE),DL.DATE_BIRTH)/12) >= CASE WHEN DL.SKP_FAMILY_STATUS = 1 THEN 21
+                                                                     WHEN DL.SKP_FAMILY_STATUS IN (2,3,4)THEN 19 
+                                                                      END
+  AND upper(trim(CL.CAMP_TYPE)) = 'MPF'
+  AND upper(trim(CL.SID_RESULT)) = 'SID_OK'
+  and cl.eligible_final_flag = 1
+  --and lower(cl.pricing_strategy) = 'champion'
+  AND CL.ID_CUID NOT IN (SELECT ID_CUID FROM AP_RISK.ELIGIBILILITY_DAILY_CHECK WHERE FLAG_STILL_ELIGIBLE='N' AND TRUNC(SYSDATE) BETWEEN TRUNC(DATE_VALID_FROM) AND TRUNC(DATE_VALID_TO))
+  AND CL.ID_CUID NOT IN ( SELECT ID_CUID FROM AP_CRM.DO_NOT_CONTACT ) 
+  AND C.AMT_CREDIT_MAX >=3000000;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_CAMP_1');
+
+  /*CREATE GLOBAL TEMPORARY TABLE GTT_KTP 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT C.SKP_CLIENT,
+         FCD.TEXT_DOCUMENT_NUMBER ID_KTP,
+         FCD.DTIME_VALID_TO EXPIRY_DATE_KTP
+    FROM GTT_CAMP_1 C
+    LEFT JOIN OWNER_DWH.F_CLIENT_DOCUMENT_AD FCD ON C.SKP_CLIENT = FCD.SKP_CLIENT
+    WHERE 1 = 0;*/
+
+  pTruncate('GTT_KTP');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_KTP' ) ;
+  INSERT /*+APPEND*/ INTO GTT_KTP
+  SELECT C.SKP_CLIENT,
+         FCD.TEXT_DOCUMENT_NUMBER ID_KTP,
+         FCD.DTIME_VALID_TO EXPIRY_DATE_KTP
+    FROM GTT_CAMP_1 C
+    LEFT JOIN OWNER_DWH.F_CLIENT_DOCUMENT_AD FCD ON C.SKP_CLIENT = FCD.SKP_CLIENT
+    WHERE SKP_CLIENT_DOCUMENT_TYPE = 9
+      AND CODE_STATUS = 'a';
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_KTP');
+
+  /*CREATE GLOBAL TEMPORARY TABLE GTT_CLIENT_EMAIL 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT SKP_CLIENT,
+         TEXT_EMAIL CLIENT_EMAIL
+    FROM ( SELECT FAC.SKP_CLIENT,
+                  FAC.TEXT_EMAIL,
+                  ROW_NUMBER() OVER (PARTITION BY FAC.SKP_CLIENT ORDER BY FAC.DATE_EFFECTIVE DESC) RNK
+             FROM GTT_CAMP_1 C
+             LEFT JOIN OWNER_DWH.F_APPLICATION_CLIENT_TT FAC ON C.SKP_CLIENT=FAC.SKP_CLIENT
+             WHERE FAC.TEXT_EMAIL <> 'XNA'
+             ORDER BY FAC.SKP_CLIENT
+         ) Z
+    WHERE Z.RNK = 1 ;*/
+
+  pTruncate('GTT_CLIENT_EMAIL');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_CLIENT_EMAIL' ) ;
+  INSERT /*+APPEND*/ INTO GTT_CLIENT_EMAIL
+  SELECT SKP_CLIENT,
+         TEXT_EMAIL CLIENT_EMAIL
+    FROM ( SELECT FAC.SKP_CLIENT,
+                  FAC.TEXT_EMAIL,
+                  ROW_NUMBER() OVER (PARTITION BY FAC.SKP_CLIENT ORDER BY FAC.DATE_EFFECTIVE DESC) RNK
+             FROM GTT_CAMP_1 C
+             LEFT JOIN OWNER_DWH.F_APPLICATION_CLIENT_TT FAC ON C.SKP_CLIENT=FAC.SKP_CLIENT
+             WHERE FAC.TEXT_EMAIL <> 'XNA'
+             ORDER BY FAC.SKP_CLIENT
+         ) Z
+    WHERE Z.RNK = 1 ;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_CLIENT_EMAIL');
+
+/*  CREATE GLOBAL TEMPORARY TABLE GTT_DC_RO 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT V.*
+    FROM ( SELECT FCR.SKP_CLIENT,
+                  FCR.CODE_STATUS,
+                  TRUNC(FCR.DTIME_INSERTED) COMMUNICATION_DAY_LAST,
+                  CT.NAME_COMMUNICATION_STATUS AS STATUS_COM,
+                  FCR.CODE_SUBTYPE,
+                  FCR.CODE_TYPE_CODE,
+                  FCR.CODE_RESULT_TYPE,
+                  CCT.NAME_COMMUNICATION_RESULT_TYPE,
+                  COM.TEXT_VALUE,
+                  ROW_NUMBER( ) OVER (PARTITION BY FCR.SKP_CLIENT ORDER BY  FCR.DTIME_INSERTED DESC ) ORDR
+             FROM GTT_CAMP_1                                   CAMP
+             JOIN GTT_COMM_REC                                FCR ON CAMP.SKP_CLIENT = FCR.SKP_CLIENT
+                                                                 AND UPPER(FCR.CODE_TYPE_CODE) IN ('MPF','X_SELL')
+                                                                 AND CODE_RESULT_TYPE  NOT IN   ('XNA' , 'N_A')
+                                                                 AND DATE_CALL > ADD_MONTHS( LAST_DAY( TRUNC(SYSDATE)) , -7) +1   
+             LEFT JOIN OWNER_DWH.CL_COMMUNICATION_RESULT_TYPE CCT ON CCT.SKP_COMMUNICATION_RESULT_TYPE = FCR.SKP_COMMUNICATION_RESULT_TYPE
+             LEFT JOIN OWNER_DWH.CL_COMMUNICATION_STATUS       CT ON CT.SKP_COMMUNICATION_STATUS = FCR.SKP_COMMUNICATION_STATUS
+             LEFT JOIN OWNER_DWH.F_COMM_RESULT_PART_TT        COM ON COM.SKF_COMMUNICATION_RECORD=FCR.SKF_COMMUNICATION_RECORD
+                                                                 AND COM.FLAG_ARCHIVED = 'N'
+             WHERE 1 = 0
+          ) V
+    WHERE  V.ORDR = 1;
+*/
+  pTruncate('GTT_DC_RO');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_DC_RO' ) ;
+  INSERT /*+APPEND*/ INTO GTT_DC_RO
+  SELECT V.*
+    FROM ( SELECT FCR.SKP_CLIENT,
+                  FCR.CODE_STATUS,
+                  TRUNC(FCR.DTIME_INSERTED) COMMUNICATION_DAY_LAST,
+                  CT.NAME_COMMUNICATION_STATUS AS STATUS_COM,
+                  FCR.CODE_SUBTYPE,
+                  FCR.CODE_TYPE_CODE,
+                  FCR.CODE_RESULT_TYPE,
+                  CCT.NAME_COMMUNICATION_RESULT_TYPE,
+                  COM.TEXT_VALUE,
+                  ROW_NUMBER( ) OVER (PARTITION BY FCR.SKP_CLIENT ORDER BY  FCR.DTIME_INSERTED DESC ) ORDR
+             FROM GTT_CAMP_1                                   CAMP
+             JOIN GTT_COMM_REC                                FCR ON CAMP.SKP_CLIENT = FCR.SKP_CLIENT
+                                                                 AND UPPER(FCR.CODE_TYPE_CODE) IN ('MPF','X_SELL')
+                                                                 --AND CODE_RESULT_TYPE  NOT IN   ('XNA' , 'N_A')
+                                                                 AND CODE_STATUS LIKE 'CLC%' /*Adjust query due to commlist update*/
+                                                                 AND DATE_CALL > ADD_MONTHS( LAST_DAY( TRUNC(SYSDATE)) , -7) +1   /* HISTORY PARAMETER   TO SEARCH *********/
+             LEFT JOIN OWNER_DWH.CL_COMMUNICATION_RESULT_TYPE CCT ON CCT.SKP_COMMUNICATION_RESULT_TYPE = FCR.SKP_COMMUNICATION_RESULT_TYPE
+             LEFT JOIN OWNER_DWH.CL_COMMUNICATION_STATUS       CT ON CT.SKP_COMMUNICATION_STATUS = FCR.SKP_COMMUNICATION_STATUS
+             LEFT JOIN OWNER_DWH.F_COMM_RESULT_PART_TT        COM ON COM.SKF_COMMUNICATION_RECORD=FCR.SKF_COMMUNICATION_RECORD
+                                                                 AND COM.FLAG_ARCHIVED = 'N'
+          ) V
+    WHERE  V.ORDR = 1;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_DC_RO');
+
+/*  CREATE GLOBAL TEMPORARY TABLE GTT_CON 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT *
+    FROM ( SELECT CAMP.SKP_CLIENT,
+                  ROW_NUMBER() OVER (PARTITION BY CAMP.SKP_CLIENT ORDER BY DCC.DATE_DECISION DESC ) ORD_CONTR,
+                  CCS.NAME_CREDIT_STATUS,
+                  CCS.CODE_CREDIT_STATUS,
+                  DCC.SKP_CONTRACT , DCC.TEXT_CONTRACT_NUMBER, DCC.DATE_DECISION
+             FROM GTT_CAMP_1                  CAMP
+             LEFT JOIN GTT_CRED_CASE         DCC ON CAMP.SKP_CLIENT = DCC.SKP_CLIENT
+                                            AND DCC.DATE_DECISION < ADD_MONTHS(LAST_DAY(TRUNC(SYSDATE)),-1)
+             JOIN OWNER_DWH.CL_CREDIT_STATUS CCS ON DCC.SKP_CREDIT_STATUS = CCS.SKP_CREDIT_STATUS
+                                                AND CCS.NAME_CREDIT_STATUS IN ('Active', 'Finished' )
+          )
+    WHERE ORD_CONTR = 1;
+*/
+  pTruncate('GTT_CON');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_CON' ) ;
+  INSERT /*+APPEND*/ INTO GTT_CON
+  SELECT *
+    FROM ( SELECT CAMP.SKP_CLIENT,
+                  ROW_NUMBER() OVER (PARTITION BY CAMP.SKP_CLIENT ORDER BY DCC.DATE_DECISION DESC ) ORD_CONTR,
+                  CCS.NAME_CREDIT_STATUS,
+                  CCS.CODE_CREDIT_STATUS,
+                  DCC.SKP_CONTRACT , DCC.TEXT_CONTRACT_NUMBER, DCC.DATE_DECISION
+             FROM GTT_CAMP_1                  CAMP
+             LEFT JOIN GTT_CRED_CASE         DCC ON CAMP.SKP_CLIENT = DCC.SKP_CLIENT
+                                                AND DCC.DATE_DECISION < ADD_MONTHS(LAST_DAY(TRUNC(SYSDATE)),-1)
+             JOIN OWNER_DWH.CL_CREDIT_STATUS CCS ON DCC.SKP_CREDIT_STATUS = CCS.SKP_CREDIT_STATUS
+                                                AND CCS.NAME_CREDIT_STATUS IN ('Active', 'Finished' )
+          )
+    WHERE ORD_CONTR = 1;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_CON');
+
+/*  CREATE GLOBAL TEMPORARY TABLE GTT_CONTRACT_MPF_M0 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT *
+    FROM ( SELECT CAMP.SKP_CLIENT,
+                  ROW_NUMBER() OVER (PARTITION BY CAMP.SKP_CLIENT ORDER BY DCC.DATE_DECISION DESC ) ORD_CONTR,
+                  CCS.NAME_CREDIT_STATUS,
+                  CCS.CODE_CREDIT_STATUS,
+                  DCC.SKP_CONTRACT , DCC.TEXT_CONTRACT_NUMBER, DCC.DATE_DECISION
+             FROM GTT_CAMP_1                   CAMP
+             LEFT JOIN GTT_CRED_CASE         DCC ON CAMP.SKP_CLIENT = DCC.SKP_CLIENT
+                                                AND DCC.DATE_DECISION >= TRUNC(SYSDATE, 'mm')
+             JOIN OWNER_DWH.CL_CREDIT_STATUS CCS ON DCC.SKP_CREDIT_STATUS = CCS.SKP_CREDIT_STATUS
+             JOIN OWNER_DWH.DC_SALESROOM     DCS ON DCC.SKP_SALESROOM = DCS.SKP_SALESROOM
+                                                AND DCS.SKP_SALESROOM = '61891'
+             WHERE 0 = 1 
+          ) ;
+*/
+  pTruncate('GTT_CONTRACT_MPF_M0');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_CONTRACT_MPF_M0' ) ;
+  INSERT /*+APPEND*/ INTO GTT_CONTRACT_MPF_M0
+  SELECT *
+    FROM ( SELECT CAMP.SKP_CLIENT,
+                  ROW_NUMBER() OVER (PARTITION BY CAMP.SKP_CLIENT ORDER BY DCC.DATE_DECISION DESC ) ORD_CONTR,
+                  CCS.NAME_CREDIT_STATUS,
+                  CCS.CODE_CREDIT_STATUS,
+                  DCC.SKP_CONTRACT , DCC.TEXT_CONTRACT_NUMBER, DCC.DATE_DECISION
+             FROM GTT_CAMP_1                   CAMP
+             LEFT JOIN GTT_CRED_CASE          DCC ON CAMP.SKP_CLIENT = DCC.SKP_CLIENT
+                                                 AND DCC.DATE_DECISION >= TRUNC(SYSDATE, 'mm')
+             JOIN OWNER_DWH.CL_CREDIT_STATUS  CCS ON DCC.SKP_CREDIT_STATUS = CCS.SKP_CREDIT_STATUS
+             JOIN OWNER_DWH.DC_SALESROOM      DCS ON DCC.SKP_SALESROOM = DCS.SKP_SALESROOM
+                                                 AND DCS.SKP_SALESROOM = '61891'
+          ) WHERE ORD_CONTR = 1 ;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_CONTRACT_MPF_M0');
+
+/*  CREATE GLOBAL TEMPORARY TABLE GTT_CONTACTED 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT SUM (CASE WHEN PREV_M = 'M0' THEN CONTACTED_COUNT END) CONTACTED_M0,
+         SUM (CASE WHEN PREV_M = 'M0' THEN 1 END ) ATTEMPT_DAYS_M0,
+         SUM (CASE WHEN PREV_M IN ( 'M1' , 'M2' ) THEN  CONTACTED_COUNT END ) CONTACTED_M1_2,
+         SUM (CASE WHEN PREV_M IN ( 'M1' , 'M2' ) THEN 1 END  )  ATTEMPT_DAYS_M1_2,
+         MAX(DAY_CALLED) LAST_ATTEMPT,
+         MIN(DAY_CALLED) FIRST_ATTEMPT,
+         SKP_CLIENT --, PREV_M
+    FROM ( SELECT SUM( CASE WHEN CT.NAME_COMMUNICATION_STATUS  = 'Client contacted' THEN 1 ELSE 0END) CONTACTED_COUNT,
+                  COUNT(1) ATTEMPTS_COUNT,
+                  FCR.SKP_CLIENT,
+                  FCR.DATE_CALL DAY_CALLED,
+                  CASE WHEN LAST_DAY(FCR.DATE_CALL) = LAST_DAY(TRUNC(SYSDATE))                 THEN 'M0'
+                       WHEN LAST_DAY(FCR.DATE_CALL) = ADD_MONTHS(LAST_DAY(TRUNC(SYSDATE)), -1) THEN 'M1'
+                       WHEN LAST_DAY(FCR.DATE_CALL) = ADD_MONTHS(LAST_DAY(TRUNC(SYSDATE)), -2) THEN 'M2'
+                                                                                               ELSE 'M4'
+                  END PREV_M
+             FROM GTT_CAMP_1                                   CAMP
+             JOIN GTT_COMM_REC                                FCR ON CAMP.SKP_CLIENT = FCR.SKP_CLIENT
+                                                                 AND UPPER(FCR.CODE_TYPE_CODE) = 'MPF' --AND CODE_RESULT_TYPE <>  'XNA'
+                                                                 AND FCR.DATE_CALL BETWEEN ADD_MONTHS( LAST_DAY( TRUNC(SYSDATE)),-3) +1 AND TRUNC(SYSDATE)
+             LEFT JOIN OWNER_DWH.CL_COMMUNICATION_RESULT_TYPE CCT ON CCT.SKP_COMMUNICATION_RESULT_TYPE = FCR.SKP_COMMUNICATION_RESULT_TYPE
+             LEFT JOIN OWNER_DWH.CL_COMMUNICATION_STATUS       CT ON CT.SKP_COMMUNICATION_STATUS = FCR.SKP_COMMUNICATION_STATUS
+             WHERE 1 = 0
+             GROUP BY FCR.SKP_CLIENT,
+                      FCR.DATE_CALL,
+                      CASE WHEN LAST_DAY(FCR.DATE_CALL) = LAST_DAY(TRUNC(SYSDATE))                 THEN 'M0'
+                           WHEN LAST_DAY(FCR.DATE_CALL) = ADD_MONTHS(LAST_DAY(TRUNC(SYSDATE)), -1) THEN 'M1'
+                           WHEN LAST_DAY(FCR.DATE_CALL) = ADD_MONTHS(LAST_DAY(TRUNC(SYSDATE)), -2) THEN 'M2'
+                                                                                                   ELSE 'M4'
+                      END
+            )
+    GROUP BY SKP_CLIENT;
+*/
+  pTruncate('GTT_CONTACTED');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_CONTACTED' ) ;
+  INSERT /*+APPEND*/ INTO GTT_CONTACTED
+  SELECT SUM (CASE WHEN PREV_M = 'M0' THEN CONTACTED_COUNT END) CONTACTED_M0,
+         SUM (CASE WHEN PREV_M = 'M0' THEN 1 END ) ATTEMPT_DAYS_M0,
+         SUM (CASE WHEN PREV_M IN ( 'M1' ) THEN  CONTACTED_COUNT END ) CONTACTED_M1,
+         SUM (CASE WHEN PREV_M IN ( 'M1' ) THEN 1 END  )  ATTEMPT_DAYS_M1,   
+         SUM (CASE WHEN PREV_M IN ( 'M1' , 'M2' ) THEN  CONTACTED_COUNT END ) CONTACTED_M1_2,
+         SUM (CASE WHEN PREV_M IN ( 'M1' , 'M2' ) THEN 1 END  )  ATTEMPT_DAYS_M1_2,
+         MAX(DAY_CALLED) LAST_ATTEMPT,
+         MIN(DAY_CALLED) FIRST_ATTEMPT,
+         SKP_CLIENT --, PREV_M
+    FROM ( SELECT SUM( CASE WHEN CT.NAME_COMMUNICATION_STATUS  = 'Client contacted' THEN 1 ELSE 0 END) CONTACTED_COUNT,
+                  COUNT(1) ATTEMPTS_COUNT,
+                  FCR.SKP_CLIENT,
+                  FCR.DATE_CALL DAY_CALLED,
+                  CASE WHEN LAST_DAY(FCR.DATE_CALL) = LAST_DAY(TRUNC(SYSDATE))                 THEN 'M0'
+                       WHEN LAST_DAY(FCR.DATE_CALL) = ADD_MONTHS(LAST_DAY(TRUNC(SYSDATE)), -1) THEN 'M1'
+                       WHEN LAST_DAY(FCR.DATE_CALL) = ADD_MONTHS(LAST_DAY(TRUNC(SYSDATE)), -2) THEN 'M2'
+                                                                                               ELSE 'M4'
+                  END PREV_M
+             FROM GTT_CAMP_1                                   CAMP
+             JOIN GTT_COMM_REC                                FCR ON CAMP.SKP_CLIENT = FCR.SKP_CLIENT
+                                                                 AND UPPER(FCR.CODE_TYPE_CODE) = 'MPF' --AND CODE_RESULT_TYPE <>  'XNA'
+                                                                 AND FCR.DATE_CALL BETWEEN ADD_MONTHS( LAST_DAY( TRUNC(SYSDATE)),-3) +1 AND TRUNC(SYSDATE)
+             LEFT JOIN OWNER_DWH.CL_COMMUNICATION_RESULT_TYPE CCT ON CCT.SKP_COMMUNICATION_RESULT_TYPE = FCR.SKP_COMMUNICATION_RESULT_TYPE
+             LEFT JOIN OWNER_DWH.CL_COMMUNICATION_STATUS       CT ON CT.SKP_COMMUNICATION_STATUS = FCR.SKP_COMMUNICATION_STATUS
+             --left join owner_dwh.f_comm_result_part_tt fcp on fcr.skf_communication_record = fcp.skf_communication_record
+             --where code_comm_result_part is null or code_comm_result_part <> 'CALL_ON' /*eliminate this parameter*/
+             GROUP BY FCR.SKP_CLIENT,
+                      FCR.DATE_CALL,
+                      CASE WHEN LAST_DAY(FCR.DATE_CALL) = LAST_DAY(TRUNC(SYSDATE))                 THEN 'M0'
+                           WHEN LAST_DAY(FCR.DATE_CALL) = ADD_MONTHS(LAST_DAY(TRUNC(SYSDATE)), -1) THEN 'M1'
+                           WHEN LAST_DAY(FCR.DATE_CALL) = ADD_MONTHS(LAST_DAY(TRUNC(SYSDATE)), -2) THEN 'M2'
+                                                                                                   ELSE 'M4'
+                      END
+            )
+    GROUP BY SKP_CLIENT ;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_CONTACTED');
+
+/*  CREATE GLOBAL TEMPORARY TABLE GTT_DEL 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT CAMP.SKP_CLIENT,
+        MAX(CAD.CNT_DAYS_PAST_DUE_TOLERANCE) DEL_CLIENT
+    FROM GTT_CAMP_1       CAMP
+    JOIN GTT_CONTRACT_AD CAD ON CAD.SKP_CLIENT = CAMP.SKP_CLIENT
+    WHERE 1 = 0
+    GROUP BY CAMP.SKP_CLIENT
+    HAVING MAX(CAD.CNT_DAYS_PAST_DUE_TOLERANCE) > 0;
+*/
+  pTruncate('GTT_DEL');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_DEL' ) ;
+  INSERT /*+APPEND*/ INTO GTT_DEL
+  SELECT CAMP.SKP_CLIENT,
+        MAX(CAD.CNT_DAYS_PAST_DUE_TOLERANCE) DEL_CLIENT
+    FROM GTT_CAMP_1       CAMP
+    JOIN GTT_CONTRACT_AD CAD ON CAD.SKP_CLIENT = CAMP.SKP_CLIENT
+    GROUP BY CAMP.SKP_CLIENT
+    HAVING MAX(CAD.CNT_DAYS_PAST_DUE_TOLERANCE) > 0;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_DEL');
+
+/*  CREATE GLOBAL TEMPORARY TABLE GTT_POS_ID 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT *
+    FROM ( SELECT ROW_NUMBER() OVER (PARTITION BY CAMP.SKP_CLIENT ORDER BY
+                                       CASE WHEN DATE_PROPOSAL = TO_DATE('01.01.3000', 'dd.mm.yyyy' )
+                                            THEN DTIME_APPL_SENT_TO_EVALUATION
+                                            ELSE DATE_PROPOSAL
+                                       END DESC ) ROWN,
+                  CAMP.SKP_CLIENT,
+                  DATE_PROPOSAL,
+                  DTIME_APPL_SENT_TO_EVALUATION,
+                  DS.NAME_SALESROOM,
+                  CASE WHEN UPPER(DSL.NAME_SELLER) = 'OKE SHOP PT' THEN 'Key Account (Trikomsel - Oke)'
+                       WHEN UPPER(DSL.NAME_SELLER) = 'GLOBAL TELESHOP PT' THEN 'Key Account (Trikomsel - Global)'
+                       WHEN DS.SKP_SALESROOM_TYPE = '2' THEN 'Key Account (Non-Trikomsel)'
+                       ELSE 'Non-Key Account'
+                  END AS NAME_KEY_ACCOUNT
+             FROM GTT_CAMP_1                        CAMP
+             JOIN OWNER_DWH.DC_CREDIT_CASE_REQUEST DCC ON CAMP.SKP_CLIENT   = DCC.SKP_CLIENT
+             LEFT JOIN OWNER_DWH.DC_SALESROOM       DS ON DCC.SKP_SALESROOM = DS.SKP_SALESROOM
+             LEFT JOIN OWNER_DWH.DC_SELLER         DSL ON DSL.SKP_SELLER    = DS.SKP_SELLER
+             WHERE 0 = 1
+           )  ;
+*/
+  pTruncate('GTT_POS_ID');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_POS_ID' ) ;
+  INSERT /*+APPEND*/ INTO GTT_POS_ID
+  SELECT *
+    FROM ( SELECT ROW_NUMBER() OVER (PARTITION BY CAMP.SKP_CLIENT ORDER BY
+                                       CASE WHEN DATE_PROPOSAL = TO_DATE('01.01.3000', 'dd.mm.yyyy' )
+                                            THEN DTIME_APPL_SENT_TO_EVALUATION
+                                            ELSE DATE_PROPOSAL
+                                       END DESC ) ROWN,
+                  CAMP.SKP_CLIENT,
+                  DATE_PROPOSAL,
+                  DTIME_APPL_SENT_TO_EVALUATION,
+                  DS.NAME_SALESROOM,
+                  CASE WHEN UPPER(DSL.NAME_SELLER) = 'OKE SHOP PT' THEN 'Key Account (Trikomsel - Oke)'
+                       WHEN UPPER(DSL.NAME_SELLER) = 'GLOBAL TELESHOP PT' THEN 'Key Account (Trikomsel - Global)'
+                       WHEN DS.SKP_SALESROOM_TYPE = '2' THEN 'Key Account (Non-Trikomsel)'
+                       ELSE 'Non-Key Account'
+                  END AS NAME_KEY_ACCOUNT
+             FROM GTT_CAMP_1                        CAMP
+             JOIN OWNER_DWH.DC_CREDIT_CASE_REQUEST DCC ON CAMP.SKP_CLIENT   = DCC.SKP_CLIENT
+             LEFT JOIN OWNER_DWH.DC_SALESROOM       DS ON DCC.SKP_SALESROOM = DS.SKP_SALESROOM
+             LEFT JOIN OWNER_DWH.DC_SELLER         DSL ON DSL.SKP_SELLER    = DS.SKP_SELLER
+           ) WHERE ROWN = 1 ;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_POS_ID');
+
+/*  CREATE GLOBAL TEMPORARY TABLE GTT_CALL_LIST_BASE 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT *
+    FROM ( SELECT ROW_NUMBER() OVER (ORDER BY TO_NUMBER(PRIORITY), MAX_CREDIT_AMOUNT DESC, TO_NUMBER(PRIORITY_NEW), TO_NUMBER(PRIOR_SEC), ATTEMPT_DAYS_M0) AS ORD,
+                  VVV.*
+             FROM ( SELECT CASE WHEN ATTEMPT_DAYS_M0 IS NULL  THEN 2 ELSE 10 END PRIOR_SEC,
+                           VV.*
+                      FROM ( SELECT CAMP. *,
+                                    CON.ATTEMPT_DAYS_M0,
+                                    CON.CONTACTED_M0,
+                                    DC_RO.COMMUNICATION_DAY_LAST,
+                                    DC_RO.NAME_COMMUNICATION_RESULT_TYPE,
+                                    DC_RO.CODE_SUBTYPE,
+                                    DC_RO.CODE_TYPE_CODE,
+                                    DC_RO.CODE_RESULT_TYPE,
+                                    CON.FIRST_ATTEMPT,
+                                    CON.LAST_ATTEMPT,
+                                    CONTACTED_M1_2,
+                                    CASE WHEN DC_RO.CODE_RESULT_TYPE = 'TS_DO'
+                                          AND COMMUNICATION_DAY_LAST > ADD_MONTHS(TRUNC(SYSDATE), -6)       THEN 'N'
+                                         WHEN DC_RO.CODE_RESULT_TYPE IN ('TS_NI','MPF_NICXS', 'MPF_NIBOFF')
+                                          AND DC_RO.TEXT_VALUE IN ('RSN_1','RSN_MPF4')
+                                          AND LAST_DAY(TRUNC(SYSDATE)) = LAST_DAY(COMMUNICATION_DAY_LAST)   THEN 'N'
+                                         WHEN DC_RO.CODE_RESULT_TYPE IN ( 'TS_NI', 'TS_RO' , 'TS_AO', 'MPF_NICXS', 'MPF_NIBOFF' )
+                                          AND DC_RO.COMMUNICATION_DAY_LAST BETWEEN ADD_MONTHS( LAST_DAY( TRUNC(SYSDATE)), -1) +1 AND TRUNC(SYSDATE)
+                                                                                                            THEN 'N'
+                                         WHEN NVL(CON.ATTEMPT_DAYS_M0, 0)  >=  3                            THEN 'N'
+                                         WHEN NVL(CON.ATTEMPT_DAYS_M0, 0)  <  3                             THEN 'Y'
+                                    END TO_CALL,
+                                    CAST('' AS VARCHAR2(255)) CALL_TYPE,
+                                    DEL_CLIENT,
+                                    POS_ID.DATE_PROPOSAL,
+                                    CAST('' AS VARCHAR2(255))  TEXT_NOTE
+                               FROM GTT_CAMP_1                   CAMP
+                               LEFT JOIN GTT_CONTACTED CON ON CON.SKP_CLIENT    = CAMP.SKP_CLIENT
+                               LEFT JOIN GTT_DC_RO   DC_RO ON DC_RO.SKP_CLIENT  = CAMP.SKP_CLIENT
+                               LEFT JOIN GTT_DEL       DEL ON DEL.SKP_CLIENT    = CAMP.SKP_CLIENT
+                               JOIN GTT_POS_ID      POS_ID ON POS_ID.SKP_CLIENT = CAMP.SKP_CLIENT
+                                                          AND LEAST(POS_ID.DATE_PROPOSAL,POS_ID.DTIME_APPL_SENT_TO_EVALUATION) < TRUNC(SYSDATE) -90) VV)  VVV
+                               WHERE 1 = 0)
+    WHERE ORD  <= 20000 --(  SELECT COUNT(1) OP_COUNT FROM APP_ACCOUNT.OPS_OPERATORS_MPF) * 150 * 2
+     AND PRIORITY IN (1,2,3) ;
+*/
+  pTruncate('GTT_CALL_LIST_BASE');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_CALL_LIST_BASE' ) ;
+  INSERT /*+APPEND*/ INTO GTT_CALL_LIST_BASE
+  SELECT *
+    FROM ( SELECT ROW_NUMBER() OVER (ORDER BY TO_NUMBER(PRIOR_SEC), MAX_CREDIT_AMOUNT DESC) AS ORD,
+                  VVV.*
+             FROM ( SELECT 
+                    /*
+                     case when attempt_days_M0 is null and to_number(priority) = 1 then 1
+                          when attempt_days_M0 =1 and to_number(priority) = 1 then 2
+                          when attempt_days_M0 =2 and to_number(priority) = 1 and max_credit_amount >=15000000 then 3
+                          when attempt_days_M0 is null and attempt_days_M1 is null and to_number(priority) = 2 then 4
+                          when attempt_days_M0 is null and to_number(priority) = 2 then 5
+                          when attempt_days_M0 =1 and to_number(priority) = 2 then 6
+                          when attempt_days_M0 is null and to_number(priority) = 3 then 7
+                          when attempt_days_M0 =1 and to_number(priority) = 3 then 8
+                      else 99 end as prior_sec,
+                      */
+                       case when attempt_days_M0 is null and to_number(priority) = 1 then 1
+                          when attempt_days_M0 =1 and to_number(priority) = 1 then 2
+                          when attempt_days_M0 =2 and to_number(priority) = 1 then 3
+                          when attempt_days_M0 =3 and to_number(priority) = 1 then 4
+                          when attempt_days_M0 =4 and to_number(priority) = 1 then 5
+                          when attempt_days_M0 =5 and to_number(priority) = 1 then 6
+                          when attempt_days_M0 =6 and to_number(priority) = 1 then 7
+
+                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 3 then 8
+                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 3 then 9
+                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 4 then 10
+                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 4 then 11
+                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 5 then 12
+                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 5 then 13
+                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 6 then 14
+                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 6 then 15
+                          when attempt_days_M0 is null and final_flag='pilot_vip' and to_number(priority) = 7 then 16
+                          when attempt_days_M0 =1 and final_flag='pilot_vip' and to_number(priority) = 7 then 17
+                          when attempt_days_M0 is null and attempt_days_M1 is null and to_number(priority) = 2 then 18
+
+                          when attempt_days_M0 is null and final_flag='pilot_fake_p1' and to_number(priority) = 2 then 19
+                          when attempt_days_M0 =1 and final_flag='pilot_fake_p1' and to_number(priority) = 2 then 20
+                          when attempt_days_M0 is null and final_flag='pilot_fake_p1' and to_number(priority) = 3 then 21
+                          when attempt_days_M0 =1 and final_flag='pilot_fake_p1' and to_number(priority) = 3 then 22
+                          when attempt_days_M0 is null and final_flag='pilot_fake_p1' and to_number(priority) between 4 and 9  then 23
+                          when attempt_days_M0 =1 and final_flag='pilot_fake_p1' and to_number(priority) between 4 and 9 then 24
+                          when attempt_days_M0 is null and final_flag='pilot_fake_p1' and to_number(priority) >= 10 then 25
+                          when attempt_days_M0 =1 and final_flag='pilot_fake_p1' and to_number(priority) >= 10 then 26
+
+
+                          when attempt_days_M0 is null and to_number(priority) = 2 then 27
+                          when attempt_days_M0 =1 and to_number(priority) = 2 then 28                        
+                          when attempt_days_M0 =2 and to_number(priority) = 2 then 29
+                          when attempt_days_M0 =3 and to_number(priority) = 2 then 30    
+                          when attempt_days_M0 =4 and to_number(priority) = 2 then 31 
+                          when attempt_days_M0 =5 and to_number(priority) = 2 then 32
+                          when attempt_days_M0 =6 and to_number(priority) = 2 then 33
+
+                          when attempt_days_M0 is null and to_number(priority) = 3 then 34
+                          when attempt_days_M0 =1 and to_number(priority) = 3 then 35
+                          when attempt_days_M0 =2 and to_number(priority) = 3 then 36
+                          when attempt_days_M0 =3 and to_number(priority) = 3 then 37
+                          when attempt_days_M0 =4 and to_number(priority) = 3 then 38
+                          when attempt_days_M0 =5 and to_number(priority) = 3 then 39
+                          when attempt_days_M0 =6 and to_number(priority) = 3 then 40
+
+                          when attempt_days_M0 is null and to_number(priority) = 4 then 41
+                          when attempt_days_M0 =1 and to_number(priority) = 4 then 42
+                          when attempt_days_M0 is null and to_number(priority) = 5 then 43
+                          when attempt_days_M0 =1 and to_number(priority) = 5 then 44                   
+                          else 99 end as prior_sec,
+                           VV.*
+                      FROM ( SELECT 
+                                    CAMP.campaign_id,
+                                    CAMP.ID_CUID,
+                                    CAMP.max_credit_amount,
+                                    CAMP.max_annuity,
+                                    CAMP.validity_period,
+                                    CAMP.dpd_history,
+                                    CAMP.dpd_12_ms,
+                                    CAMP.dpd_3_ms,
+                                    CAMP.type,
+                                    CAMP.priority,
+                                    CAMP.campaign_type,
+                                    CAMP.date_valid_from,
+                                    CAMP.date_valid_to,
+                                    CAMP.sid_result,
+                                    CAMP.score,
+                                    CAMP.risk_group,
+                                    CAMP.rbp_segment,
+                                    CAMP.skp_client,
+                                    CAMP.priority_new,
+                                    CAMP.full_name,
+                                    CAMP.firstname,
+                                    CAMP.lastname,
+                                    CAMP.name_mother,
+                                    CAMP.date_birth,
+                                    CAMP.place_birth,
+                                    CAMP.code_Family_status,
+                                    CAMP.name_credit_status,
+                                    CAMP.final_flag,
+                                    CON.ATTEMPT_DAYS_M0,
+                                    CON.CONTACTED_M0,
+                                    CON.ATTEMPT_DAYS_M1,
+                                    DC_RO.COMMUNICATION_DAY_LAST,
+                                    DC_RO.NAME_COMMUNICATION_RESULT_TYPE,
+                                    DC_RO.CODE_SUBTYPE,
+                                    DC_RO.CODE_TYPE_CODE,
+                                    DC_RO.CODE_RESULT_TYPE,
+                                    CON.FIRST_ATTEMPT,
+                                    CON.LAST_ATTEMPT,
+                                    CONTACTED_M1_2,
+                                    CASE WHEN DC_RO.CODE_RESULT_TYPE = 'TS_DO'
+                                          AND COMMUNICATION_DAY_LAST > ADD_MONTHS(TRUNC(SYSDATE), -6)       THEN 'N'
+                                         WHEN DC_RO.CODE_STATUS = 'CLC_MPF_DWTO'
+                                          AND COMMUNICATION_DAY_LAST > ADD_MONTHS(TRUNC(SYSDATE), -6)       THEN 'N'
+                                         WHEN DC_RO.CODE_RESULT_TYPE IN ('TS_NI','MPF_NICXS', 'MPF_NIBOFF','CLC_CB','MPF_IT')
+                                          --AND DC_RO.TEXT_VALUE IN ('RSN_1','RSN_MPF4') /*exclude text_value, include callback (29/11)*/
+                                          AND LAST_DAY(TRUNC(SYSDATE)) = LAST_DAY(COMMUNICATION_DAY_LAST)   THEN 'N'
+                                         WHEN DC_RO.CODE_RESULT_TYPE IN ( 'TS_NI', 'TS_RO' , 'TS_AO', 'MPF_NICXS', 'MPF_NIBOFF' )
+                                          AND DC_RO.COMMUNICATION_DAY_LAST BETWEEN ADD_MONTHS( LAST_DAY( TRUNC(SYSDATE)), -1) +1 AND TRUNC(SYSDATE)
+                                                                                                            THEN 'N'
+                                         WHEN DC_RO.CODE_STATUS IN ( 'CLC_MPF_NINTRS', 'CLC' )
+                                         AND DC_RO.COMMUNICATION_DAY_LAST BETWEEN ADD_MONTHS( LAST_DAY( TRUNC(SYSDATE)), -1) +1 AND TRUNC(SYSDATE) THEN 'N' 
+                                         WHEN NVL(CON.ATTEMPT_DAYS_M0, 0)  >=  6                            THEN 'N'
+                                         WHEN NVL(CON.ATTEMPT_DAYS_M0, 0)  <  6                             THEN 'Y'
+                                    END TO_CALL,
+                                    '' CALL_TYPE,
+                                    DEL_CLIENT,
+                                    POS_ID.DATE_PROPOSAL,
+                                    '' TEXT_NOTE
+                               FROM GTT_CAMP_1           CAMP
+                               LEFT JOIN GTT_CONTACTED CON ON CON.SKP_CLIENT    = CAMP.SKP_CLIENT
+                               LEFT JOIN GTT_DC_RO   DC_RO ON DC_RO.SKP_CLIENT  = CAMP.SKP_CLIENT
+                               LEFT JOIN GTT_DEL       DEL ON DEL.SKP_CLIENT    = CAMP.SKP_CLIENT
+                               JOIN GTT_POS_ID      POS_ID ON POS_ID.SKP_CLIENT = CAMP.SKP_CLIENT
+                                                          AND LEAST(POS_ID.DATE_PROPOSAL,POS_ID.DTIME_APPL_SENT_TO_EVALUATION) < TRUNC(SYSDATE) -90
+                      )VV
+            )VVV 
+    WHERE TO_CALL = 'Y')
+    WHERE ORD  <= 17000 --(  SELECT COUNT(1) OP_COUNT FROM APP_ACCOUNT.OPS_OPERATORS_MPF) * 150 * 2
+     AND PRIORITY <=7 ;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_CALL_LIST_BASE');
+
+/*  CREATE GLOBAL TEMPORARY TABLE GTT_ADDRESS 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT * 
+    FROM ( SELECT ROW_NUMBER() OVER (PARTITION BY CAMP.SKP_CLIENT ORDER BY DHA.DTIME_SOURCE_INSERTED DESC) ROWN,
+                  CAMP.SKP_CLIENT,
+                  CODE_ADDRESS_TYPE,
+                  NAME_STREET,
+                  TEXT_STREET_NUMBER,
+                  TEXT_FLOOR_NUMBER,
+                  TEXT_BLOCK_NUMBER,
+                  TEXT_BUILDING_NUMBER,
+                  NAME_TOWN,
+                  NAME_SUBDISTRICT,
+                  NAME_DISTRICT,
+                  CODE_ZIP_CODE,
+                  TEXT_APARTMENT_NUMBER ,
+                  CASE WHEN UPPER(NAME_STREET) LIKE '%JL%' THEN NAME_STREET ELSE 'Jl '||NAME_STREET END ||' no. '||
+                  CASE WHEN TEXT_STREET_NUMBER = '0' THEN TEXT_FLOOR_NUMBER ELSE TEXT_STREET_NUMBER END ||
+                  CASE WHEN TEXT_BLOCK_NUMBER <> '0' THEN ', RT'||TEXT_BLOCK_NUMBER ELSE '' END  ||
+                  CASE WHEN TEXT_BUILDING_NUMBER <> '0' THEN ', RW'||TEXT_BUILDING_NUMBER ELSE '' END 
+                  ||', '||NAME_TOWN||', '||NAME_SUBDISTRICT||' - '||CODE_ZIP_CODE FULL_ADDRESS
+             FROM GTT_CAMP_1                      CAMP
+             JOIN OWNER_DWH.F_CLIENT_ADDRESS_TT FCA ON CAMP.SKP_CLIENT = FCA.SKP_CLIENT
+             JOIN OWNER_DWH.DH_ADDRESS          DHA ON FCA.SKP_ADDRESS = DHA.SKP_ADDRESS
+             JOIN OWNER_DWH.CL_ADDRESS_TYPE     CAT ON FCA.SKP_ADDRESS_TYPE = CAT.SKP_ADDRESS_TYPE
+             WHERE 1 = 0)
+    WHERE ROWN = 1 ;
+*/
+
+  pTruncate('GTT_ADDRESS');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_ADDRESS' ) ;
+  INSERT /*+APPEND*/ INTO GTT_ADDRESS
+  SELECT * 
+    FROM ( SELECT ROW_NUMBER() OVER (PARTITION BY CAMP.SKP_CLIENT ORDER BY DHA.DTIME_SOURCE_INSERTED DESC) ROWN,
+                  CAMP.SKP_CLIENT,
+                  CODE_ADDRESS_TYPE,
+                  NAME_STREET,
+                  TEXT_STREET_NUMBER,
+                  TEXT_FLOOR_NUMBER,
+                  TEXT_BLOCK_NUMBER,
+                  TEXT_BUILDING_NUMBER,
+                  NAME_TOWN,
+                  NAME_SUBDISTRICT,
+                  NAME_DISTRICT,
+                  CODE_ZIP_CODE,
+                  TEXT_APARTMENT_NUMBER ,
+                  CASE WHEN UPPER(NAME_STREET) LIKE '%JL%' THEN NAME_STREET ELSE 'Jl '||NAME_STREET END ||' no. '||
+                  CASE WHEN TEXT_STREET_NUMBER = '0' THEN TEXT_FLOOR_NUMBER ELSE TEXT_STREET_NUMBER END ||
+                  CASE WHEN TEXT_BLOCK_NUMBER <> '0' THEN ', RT'||TEXT_BLOCK_NUMBER ELSE '' END  ||
+                  CASE WHEN TEXT_BUILDING_NUMBER <> '0' THEN ', RW'||TEXT_BUILDING_NUMBER ELSE '' END 
+                  ||', '||NAME_TOWN||', '||NAME_SUBDISTRICT||' - '||CODE_ZIP_CODE FULL_ADDRESS
+             FROM GTT_CAMP_1                      CAMP
+             JOIN OWNER_DWH.F_CLIENT_ADDRESS_TT FCA ON CAMP.SKP_CLIENT = FCA.SKP_CLIENT
+             JOIN OWNER_DWH.DH_ADDRESS          DHA ON FCA.SKP_ADDRESS = DHA.SKP_ADDRESS
+             JOIN OWNER_DWH.CL_ADDRESS_TYPE     CAT ON FCA.SKP_ADDRESS_TYPE = CAT.SKP_ADDRESS_TYPE
+             WHERE CODE_ADDRESS_TYPE IN ('CONTACT')
+               AND FCA.FLAG_CURRENT IN ('Y')
+               AND FCA.CODE_STATUS IN ('a'))
+    WHERE ROWN = 1 ;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_ADDRESS');
+
+/*  CREATE GLOBAL TEMPORARY TABLE GTT_WRONG_NUMBER 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT  FCR.TEXT_CONTACT, FCR.SKP_CLIENT , COUNT(1) FR
+    FROM GTT_CAMP_1     CAMP
+    JOIN GTT_COMM_REC FCR ON CAMP.SKP_CLIENT = FCR.SKP_CLIENT
+                         AND FCR.DATE_CALL BETWEEN  TO_DATE('01.03.2015', 'dd.mm.yyyy' ) AND SYSDATE  --CL.REP_DATE AND CL.REP_DATE +5
+                         AND UPPER(FCR.CODE_TYPE_CODE) = 'MPF'
+                         AND FCR.TEXT_NOTE IN ('Fake contact', 'Family', 'Other Family', 'Friend', 'WN')
+    GROUP BY FCR.SKP_CLIENT, FCR.TEXT_CONTACT ;
+*/
+
+  pTruncate('GTT_WRONG_NUMBER');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_WRONG_NUMBER' ) ;
+  INSERT /*+APPEND*/ INTO GTT_WRONG_NUMBER
+  SELECT  FCR.TEXT_CONTACT, FCR.SKP_CLIENT , COUNT(1) FR
+    FROM GTT_CAMP_1     CAMP
+    JOIN GTT_COMM_REC FCR ON CAMP.SKP_CLIENT = FCR.SKP_CLIENT
+                         AND FCR.DATE_CALL BETWEEN  TO_DATE('01.03.2015', 'dd.mm.yyyy' ) AND SYSDATE  --CL.REP_DATE AND CL.REP_DATE +5
+                         AND UPPER(FCR.CODE_TYPE_CODE) = 'MPF'
+                         AND FCR.TEXT_NOTE IN ('Fake contact', 'Family', 'Other Family', 'Friend', 'WN')
+    GROUP BY FCR.SKP_CLIENT, FCR.TEXT_CONTACT ;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_WRONG_NUMBER');
+
+/*  CREATE GLOBAL TEMPORARY TABLE GTT_PHONE 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT VV.SKP_CLIENT,
+              PRIMARYM_1,
+              PRIMARYM_2,
+              PRIMARYM_3 ,
+              WN_CLIENT,
+              WN_TEXT_CONTACT
+    FROM ( SELECT ROW_NUMBER() OVER ( PARTITION BY SKP_CLIENT ORDER BY DTIME_VALID_FROM) ORD_PHONE,
+                 MAX(CASE WHEN ID_SOURCE IN ('PRIMARY_MOBILE' ) THEN TEXT_CONTACT  END ) OVER ( PARTITION BY SKP_CLIENT) PRIMARYM_1,
+                 MAX(CASE WHEN ID_SOURCE IN ('SECONDARY_MOBILE' ) THEN TEXT_CONTACT  END ) OVER ( PARTITION BY SKP_CLIENT) PRIMARYM_2,
+                 MAX(CASE WHEN ID_SOURCE IN ('MOBILE' ) THEN TEXT_CONTACT  END ) OVER ( PARTITION BY SKP_CLIENT) PRIMARYM_3,
+                 V.*
+            FROM ( SELECT ROW_NUMBER() OVER (PARTITION BY CAMP.SKP_CLIENT, CT2.ID_SOURCE ORDER BY  CLC.DTIME_VALID_FROM DESC ) ORD,
+                          CLC.SKP_CLIENT,
+                          CLC.TEXT_CONTACT,
+                          CLC.CODE_STATUS XCODE_STATUS,
+                          CLC.DTIME_VALID_FROM,
+                          CLC.CNT_CLIENT_CONTACT,
+                          CT2.ID_SOURCE,
+                          WN.SKP_CLIENT AS WN_CLIENT,
+                          WN.TEXT_CONTACT AS WN_TEXT_CONTACT
+                     FROM GTT_CAMP_1                     CAMP
+                     JOIN OWNER_DWH.F_CLIENT_CONTACT_TT CLC ON CAMP.SKP_CLIENT = CLC.SKP_CLIENT
+                     LEFT JOIN GTT_WRONG_NUMBER          WN ON CLC.SKP_CLIENT = WN.SKP_CLIENT
+                     JOIN OWNER_DWH.CL_CONTACT_TYPE    CT2 ON CLC.SKP_CONTACT_TYPE = CT2.SKP_CONTACT_TYPE
+                     WHERE 1 = 0) V
+            WHERE 0 = 1 ) VV
+           WHERE 0 = 1 ;*/
+
+  pTruncate('GTT_PHONE');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_PHONE' ) ;
+  INSERT /*+APPEND*/ INTO GTT_PHONE
+  SELECT VV.SKP_CLIENT,
+              PRIMARYM_1,
+              PRIMARYM_2,
+              PRIMARYM_3 ,
+              WN_CLIENT,
+              WN_TEXT_CONTACT
+    FROM ( SELECT ROW_NUMBER() OVER ( PARTITION BY SKP_CLIENT ORDER BY DTIME_VALID_FROM) ORD_PHONE,
+                 MAX(CASE WHEN ID_SOURCE IN ('PRIMARY_MOBILE' ) THEN TEXT_CONTACT  END ) OVER ( PARTITION BY SKP_CLIENT) PRIMARYM_1,
+                 MAX(CASE WHEN ID_SOURCE IN ('SECONDARY_MOBILE' ) THEN TEXT_CONTACT  END ) OVER ( PARTITION BY SKP_CLIENT) PRIMARYM_2,
+                 MAX(CASE WHEN ID_SOURCE IN ('MOBILE' ) THEN TEXT_CONTACT  END ) OVER ( PARTITION BY SKP_CLIENT) PRIMARYM_3,
+                 V.*
+            FROM ( SELECT ROW_NUMBER() OVER (PARTITION BY CAMP.SKP_CLIENT, CT2.ID_SOURCE ORDER BY  CLC.DTIME_VALID_FROM DESC ) ORD,
+                          CLC.SKP_CLIENT,
+                          CLC.TEXT_CONTACT,
+                          CLC.CODE_STATUS XCODE_STATUS,
+                          CLC.DTIME_VALID_FROM,
+                          CLC.CNT_CLIENT_CONTACT,
+                          CT2.ID_SOURCE,
+                          WN.SKP_CLIENT AS WN_CLIENT,
+                          WN.TEXT_CONTACT AS WN_TEXT_CONTACT
+                     FROM GTT_CAMP_1                     CAMP
+                     JOIN OWNER_DWH.F_CLIENT_CONTACT_TT CLC ON CAMP.SKP_CLIENT = CLC.SKP_CLIENT
+                                                           AND CLC.FLAG_DELETED = 'N'
+                                                           AND CLC.FLAG_CURRENT = 'Y'
+                                                           AND CLC.CODE_STATUS = 'a'
+                     LEFT JOIN GTT_WRONG_NUMBER          WN ON CLC.SKP_CLIENT = WN.SKP_CLIENT
+                                                         AND WN.TEXT_CONTACT = CLC.TEXT_CONTACT
+                     JOIN OWNER_DWH.CL_CONTACT_TYPE    CT2 ON CLC.SKP_CONTACT_TYPE = CT2.SKP_CONTACT_TYPE
+                                                          AND CT2.ID_SOURCE IN ('PRIMARY_MOBILE', 'SECONDARY_MOBILE', 'MOBILE' )
+                     WHERE WN.SKP_CLIENT IS NULL) V
+            WHERE ORD = 1 ) VV
+           WHERE ORD_PHONE = 1 ;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_PHONE');
+
+/*  CREATE GLOBAL TEMPORARY TABLE GTT_DEAD 
+  ON COMMIT PRESERVE ROWS 
+  AS 
+  SELECT T.CONTRACT_ID,
+         CAD.SKP_CLIENT
+    FROM AP_COLL.FT_COLLECTIONS_EXCEPTIONS_LIST T
+    JOIN GTT_CONTRACT_AD CAD ON CAD.TEXT_CONTRACT_NUMBER = TRIM(T.CONTRACT_ID)
+    WHERE 1=0
+;*/
+
+  pTruncate('GTT_DEAD');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:GTT_DEAD' ) ;
+  INSERT /*+APPEND*/ INTO GTT_DEAD
+  SELECT T.CONTRACT_ID,
+           CAD.SKP_CLIENT
+    FROM AP_COLL.FT_COLLECTIONS_EXCEPTIONS_LIST T
+    JOIN GTT_CONTRACT_AD CAD ON CAD.TEXT_CONTRACT_NUMBER = TRIM(T.CONTRACT_ID)
+    WHERE UPPER(REASON_FOR_LIST) LIKE '%DEATH%';
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT ;
+  pStats('GTT_DEAD');
+
+  pTruncate('ID_MPF_CALL_LIST_DAILY_PRE');
+  AP_PUBLIC.CORE_LOG_PKG.pStart( 'Ins:ID_MPF_CALL_LIST_DAILY_PRE' ); -- NAME OF TABLE
+  INSERT /*+APPEND*/ INTO AP_CRM.ID_MPF_CALL_LIST_DAILY_PRE
+  SELECT distinct CAMP.ID_CUID CUID,
+         CONTRACT.TEXT_CONTRACT_NUMBER CONTRACT_ID,
+         CAMP.FULL_NAME,
+         CAMP.FIRSTNAME FIRST_NAME,
+         CAMP.LASTNAME LAST_NAME,
+         CAMP.MAX_CREDIT_AMOUNT,
+         CAMP.MAX_ANNUITY MAX_ANNUITY,
+         CAMP.NAME_MOTHER MOTHER_MAIDEN_NAME,
+         CAMP.PLACE_BIRTH PLACE_OF_BIRTH,
+         CAMP.DATE_BIRTH DATE_BIRTH,
+         KTP.ID_KTP ID_KTP,
+         KTP.EXPIRY_DATE_KTP EXPIRY_DATE_KTP,
+         PHONE.PRIMARYM_1 MOBILE1,
+         PHONE.PRIMARYM_2 MOBILE2,
+         CLIENT_EMAIL.CLIENT_EMAIL EMAIL_ADDRESS,
+         NULL FATHER_PHONE,
+         NULL MOTHER_PHONE,
+         NULL SPOUSE_PHONE,
+         NULL HOME_PHONE,
+         NULL EMPLOYER_PHONE,
+         FULL_ADDRESS,
+         NAME_TOWN,
+         NAME_SUBDISTRICT,
+         CODE_ZIP_CODE,
+         NAME_DISTRICT,
+         NAME_SALESROOM,
+         CONTRACT.NAME_CREDIT_STATUS NAME_CREDIT_STATUS,
+         NULL DATE_PROMISE,
+         NULL FOLLOW_UP,
+         0 SMS_TO_SEND,
+         ' ' OPERATOR_ASSIGNED,
+         BASE.ORD,
+         NULL PROMISE_TIME,
+         NULL TEXT_VALUE
+         , CAMP.RBP_SEGMENT AS INFO1
+         --, NULL INFO2
+         , case when PL.final_flag='pilot_vip' then 'OFFER_PILOT_VIP; '||'LIMIT_MAR17:'||PL.LIMIT_FEB17||'JT; '||
+          'BUNGA_FEB17:'||PL.PRICE_1703 ELSE 'OFFER_REGULAR' END AS INFO2
+         , BASE.TEXT_NOTE NOTES
+         , CAMP.PRIORITY
+  FROM GTT_CALL_LIST_BASE                 BASE
+  JOIN GTT_CAMP_1                           CAMP  ON BASE.SKP_CLIENT = CAMP.SKP_CLIENT
+  LEFT JOIN GTT_PHONE                     PHONE ON BASE.SKP_CLIENT = PHONE.SKP_CLIENT
+  LEFT JOIN GTT_CON                    CONTRACT ON BASE.SKP_CLIENT = CONTRACT.SKP_CLIENT
+  LEFT JOIN GTT_ADDRESS                 ADDRESS ON BASE.SKP_CLIENT = ADDRESS.SKP_CLIENT
+  LEFT JOIN GTT_POS_ID                   POS_ID ON BASE.SKP_CLIENT = POS_ID.SKP_CLIENT
+  LEFT JOIN GTT_DEAD                       DEAD ON BASE.SKP_CLIENT = DEAD.SKP_CLIENT
+  LEFT JOIN GTT_KTP                         KTP ON BASE.SKP_CLIENT = KTP.SKP_CLIENT
+  LEFT JOIN GTT_CLIENT_EMAIL       CLIENT_EMAIL ON BASE.SKP_CLIENT = CLIENT_EMAIL.SKP_CLIENT
+  LEFT JOIN GTT_CONTRACT_MPF_M0 CONTRACT_MPF_M0 ON BASE.SKP_CLIENT = CONTRACT_MPF_M0.SKP_CLIENT
+  LEFT JOIN ap_crm.dct_camp_list_pilot_1703 PL ON BASE.ID_CUID=PL.ID_CUID
+  WHERE CONTRACT.TEXT_CONTRACT_NUMBER IS NOT NULL
+    AND CONTRACT_MPF_M0.TEXT_CONTRACT_NUMBER IS NULL
+    AND DEAD.SKP_CLIENT  IS NULL
+    AND NOT ( PHONE.PRIMARYM_1 IS NULL AND PHONE.PRIMARYM_2 IS NULL )
+
+;
+  AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+  COMMIT;
+
+  /* exclude people with hindu religion from 28th March call list */
+  if (trunc(sysdate) = to_date('03/28/2017','mm/dd/yyyy')) then
+    AP_PUBLIC.CORE_LOG_PKG.pStart( 'Modify:ID_MPF_CALL_LIST_DAILY_PRE' );
+    DELETE FROM AP_CRM.ID_MPF_CALL_LIST_DAILY_PRE WHERE CUID IN (select id_cuid from AP_CRM.GTT_CAMP_1 where TRIM(CODE_RELIGION) = 'HINDU');
+    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+    commit;
+  end if;
+  AP_PUBLIC.CORE_LOG_PKG.pFinish ;
+
+END AP_CRM_MPF_CALL_LIST_DAILY_NEW;
+/
