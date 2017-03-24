@@ -1308,6 +1308,7 @@ BEGIN
   if (trunc(sysdate) = to_date('03/28/2017','mm/dd/yyyy')) then
     AP_PUBLIC.CORE_LOG_PKG.pStart( 'Modify:ID_MPF_CALL_LIST_DAILY_PRE' );
     DELETE FROM AP_CRM.ID_MPF_CALL_LIST_DAILY_PRE WHERE CUID IN (select id_cuid from AP_CRM.GTT_CAMP_1 where TRIM(CODE_RELIGION) = 'HINDU');
+    or code_zip_code in (select postal_code from temp_exclude_postal)
     AP_PUBLIC.CORE_LOG_PKG.pEnd ;
     commit;
   end if;
