@@ -417,7 +417,10 @@ BEGIN
   left join ap_risk.eligibility_base cl on cl.id_cuid = dl.id_cuid and trunc(sysdate) between trunc(cl.valid_from) and trunc(cl.valid_to)
   LEFT JOIN OWNER_DWH.CL_FAMILY_STATUS FAM ON DL.SKP_FAMILY_STATUS = FAM.SKP_FAMILY_STATUS
   LEFT JOIN ( SELECT ID_CUID, PRIORITY_NEW FROM AP_CRM.TBL_SCORE) SC ON CL.ID_CUID=SC.ID_CUID
-  LEFT JOIN AP_CRM.DCT_CAMP_LIST_PILOT_1703 PL ON CL.ID_CUID=PL.ID_CUID
+  LEFT JOIN 
+        (
+          select distinct id_cuid, final_flag from AP_CRM.DCT_CAMP_LIST_PILOT_1703 
+        )PL ON CL.ID_CUID=PL.ID_CUID
   LEFT JOIN ( SELECT  ID_CUID,
                         TEXT_CONTRACT_NUMBER,
                         NAME_CREDIT_STATUS,
@@ -1037,8 +1040,8 @@ BEGIN
                                                                                                             THEN 'N'
                                          WHEN DC_RO.CODE_STATUS IN ( 'CLC_MPF_NINTRS', 'CLC' )
                                          AND DC_RO.COMMUNICATION_DAY_LAST BETWEEN ADD_MONTHS( LAST_DAY( TRUNC(SYSDATE)), -1) +1 AND TRUNC(SYSDATE) THEN 'N' 
-                                         WHEN NVL(CON.ATTEMPT_DAYS_M0, 0)  >=  6                            THEN 'N'
-                                         WHEN NVL(CON.ATTEMPT_DAYS_M0, 0)  <  6                             THEN 'Y'
+                                         WHEN NVL(CON.ATTEMPT_DAYS_M0, 0)  >=  9                            THEN 'N'
+                                         WHEN NVL(CON.ATTEMPT_DAYS_M0, 0)  <  9                             THEN 'Y'
                                     END TO_CALL,
                                     '' CALL_TYPE,
                                     DEL_CLIENT,
@@ -1053,8 +1056,8 @@ BEGIN
                       )VV
             )VVV 
     WHERE TO_CALL = 'Y')
-    WHERE ORD  <= 17000 --(  SELECT COUNT(1) OP_COUNT FROM APP_ACCOUNT.OPS_OPERATORS_MPF) * 150 * 2
-     AND PRIORITY <=7 ;
+    WHERE ORD  <= 26000 --(  SELECT COUNT(1) OP_COUNT FROM APP_ACCOUNT.OPS_OPERATORS_MPF) * 150 * 2
+     AND PRIORITY <=8 ;
   AP_PUBLIC.CORE_LOG_PKG.pEnd ;
   COMMIT ;
   pStats('GTT_CALL_LIST_BASE');
@@ -1294,7 +1297,10 @@ BEGIN
   LEFT JOIN GTT_KTP                         KTP ON BASE.SKP_CLIENT = KTP.SKP_CLIENT
   LEFT JOIN GTT_CLIENT_EMAIL       CLIENT_EMAIL ON BASE.SKP_CLIENT = CLIENT_EMAIL.SKP_CLIENT
   LEFT JOIN GTT_CONTRACT_MPF_M0 CONTRACT_MPF_M0 ON BASE.SKP_CLIENT = CONTRACT_MPF_M0.SKP_CLIENT
-  LEFT JOIN ap_crm.dct_camp_list_pilot_1703 PL ON BASE.ID_CUID=PL.ID_CUID
+  LEFT JOIN 
+       ( 
+          select distinct id_cuid, final_flag, limit_feb17, price_1702 from ap_crm.dct_camp_list_pilot_1703 
+       )PL ON BASE.ID_CUID=PL.ID_CUID
   WHERE CONTRACT.TEXT_CONTRACT_NUMBER IS NOT NULL
     AND CONTRACT_MPF_M0.TEXT_CONTRACT_NUMBER IS NULL
     AND DEAD.SKP_CLIENT  IS NULL
