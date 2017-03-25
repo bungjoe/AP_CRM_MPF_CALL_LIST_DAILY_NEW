@@ -217,7 +217,7 @@ from
   join  un on un.rule_ord = k.rule_key 
   left join sms on sms.cuid = k.cuid
   left join reduce_call  rc on rc.oper_id = un.operator_id
-  where k.ord_n <= 12000--k.op_count * 125    /**************************** leads per operator *************************************/
+  where k.ord_n <= 20000--k.op_count * 125    /**************************** leads per operator *************************************/
 
   -- next all holiday Telesales should be maintained in table (ap_crm.setting_holiday)
   and trunc(sysdate) not in (select distinct(holiday_date) from ap_crm.setting_holiday where type='Telesales')
