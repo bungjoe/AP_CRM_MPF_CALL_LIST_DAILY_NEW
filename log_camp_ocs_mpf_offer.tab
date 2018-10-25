@@ -1,0 +1,90 @@
+create table LOG_CAMP_OCS_MPF_OFFER
+(
+  record_id          NUMBER(38),
+  contact_info       VARCHAR2(250),
+  contact_info_type  NUMBER(38),
+  record_type        NUMBER(38),
+  record_status      NUMBER(38),
+  call_result        NUMBER(38),
+  attempt            NUMBER(38),
+  dial_sched_time    NUMBER(38),
+  call_time          NUMBER(38),
+  daily_from         NUMBER(38),
+  daily_till         NUMBER(38),
+  tz_dbid            NUMBER(38),
+  campaign_id        NUMBER(38),
+  agent_id           VARCHAR2(150),
+  chain_id           NUMBER(38),
+  chain_n            NUMBER(38),
+  group_id           NUMBER(38),
+  app_id             NUMBER(38),
+  treatments         VARCHAR2(255),
+  media_ref          NUMBER(38),
+  email_subject      VARCHAR2(255),
+  email_template_id  NUMBER(38),
+  switch_id          NUMBER(38),
+  s1comment          VARCHAR2(2000),
+  dcs11              CHAR(50),
+  max_credit_amount  NUMBER(38),
+  name_subdistrict   VARCHAR2(255),
+  max_installment    NUMBER(38),
+  code_zip           NUMBER(38),
+  name_district      VARCHAR2(255),
+  name_town          VARCHAR2(255),
+  full_address       VARCHAR2(1000),
+  birth_date         DATE,
+  mobile1            VARCHAR2(255),
+  mobile2            VARCHAR2(255),
+  contract_id        VARCHAR2(250),
+  mother_maiden_name VARCHAR2(90),
+  cuid               VARCHAR2(250),
+  first_name         VARCHAR2(255),
+  last_name          VARCHAR2(255),
+  id_ktp             VARCHAR2(30),
+  email_address      VARCHAR2(255),
+  info1              VARCHAR2(4000),
+  info2              VARCHAR2(4000),
+  expiry_date_ktp    DATE,
+  place_of_birth     VARCHAR2(255),
+  extracted_date     DATE,
+  log_date           DATE,
+  time_inserted      VARCHAR2(8)
+)
+partition by range (LOG_DATE) interval (NUMTOYMINTERVAL(1,'MONTH'))
+(
+  partition INIT_PART values less than (TO_DATE(' 2017-01-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P357273 values less than (TO_DATE(' 2017-11-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P362504 values less than (TO_DATE(' 2017-12-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P378495 values less than (TO_DATE(' 2018-01-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P424295 values less than (TO_DATE(' 2018-02-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P455695 values less than (TO_DATE(' 2018-03-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P487175 values less than (TO_DATE(' 2018-04-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P500425 values less than (TO_DATE(' 2018-05-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P508968 values less than (TO_DATE(' 2018-06-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P518528 values less than (TO_DATE(' 2018-07-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P528008 values less than (TO_DATE(' 2018-08-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P543988 values less than (TO_DATE(' 2018-09-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P558748 values less than (TO_DATE(' 2018-10-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P578973 values less than (TO_DATE(' 2018-11-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM
+);
+create index LCOMO_IX01 on LOG_CAMP_OCS_MPF_OFFER (LOG_DATE, TIME_INSERTED, CUID)
+  compress  nologging  local;
+create index LCOMO_IX02 on LOG_CAMP_OCS_MPF_OFFER (CUID, CALL_TIME)
+  compress  nologging;
+create index LCOMO_IX03 on LOG_CAMP_OCS_MPF_OFFER (CONTACT_INFO, CHAIN_ID, CALL_TIME)
+  nologging;
+

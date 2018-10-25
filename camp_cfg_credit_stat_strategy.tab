@@ -1,0 +1,14 @@
+create table CAMP_CFG_CREDIT_STAT_STRATEGY
+(
+  skp_strategy             VARCHAR2(20 BYTE),
+  name_credit_status       VARCHAR2(150 BYTE),
+  text_cancellation_reason VARCHAR2(250 BYTE),
+  purpose                  VARCHAR2(20 BYTE),
+  cnt_delay_days           NUMBER,
+  follow_up                NUMBER,
+  camp_status              VARCHAR2(2 BYTE) not null,
+  add_val_01               VARCHAR2(500 BYTE),
+  add_val_02               VARCHAR2(500 BYTE)
+)
+;
+

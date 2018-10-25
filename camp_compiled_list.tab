@@ -1,0 +1,83 @@
+create table CAMP_COMPILED_LIST
+(
+  period                 DATE,
+  valid_from             DATE,
+  id_cuid                NUMBER(38),
+  skp_client             NUMBER,
+  contract               VARCHAR2(80),
+  name_salesroom         VARCHAR2(1020),
+  name_full              VARCHAR2(150),
+  name_first             VARCHAR2(150),
+  name_last              VARCHAR2(150),
+  name_birth_place       VARCHAR2(150),
+  date_birth             DATE,
+  code_employment_type   VARCHAR2(20),
+  code_employer_industry VARCHAR2(20),
+  main_income            NUMBER,
+  code_education_type    VARCHAR2(20),
+  max_tenor              NUMBER,
+  max_credit_amount      NUMBER,
+  max_instalment         NUMBER,
+  rbp_segment            VARCHAR2(20 BYTE),
+  risk_group             VARCHAR2(15 BYTE),
+  risk_score             NUMBER,
+  type                   VARCHAR2(10),
+  priority               NUMBER,
+  tdy_priority           VARCHAR2(4 BYTE),
+  first_eligibility      NUMBER,
+  tdy_eligibility        CHAR(1 BYTE),
+  name_mother            VARCHAR2(100),
+  id_ktp                 VARCHAR2(50),
+  expiry_date_ktp        DATE,
+  primarym_1             VARCHAR2(100),
+  primarym_2             VARCHAR2(100),
+  primarym_3             VARCHAR2(100),
+  primarym_4             VARCHAR2(100),
+  primarym_5             VARCHAR2(100),
+  client_email           VARCHAR2(255),
+  full_address           VARCHAR2(2378),
+  name_town              VARCHAR2(255),
+  name_subdistrict       VARCHAR2(255),
+  code_zip_code          VARCHAR2(80),
+  name_district          VARCHAR2(255),
+  dead_customer          CHAR(1 BYTE),
+  has_active_ff          CHAR(1),
+  dt_intrst_inb          DATE,
+  dt_info_inb            DATE,
+  dt_cancel              DATE,
+  dt_reject              DATE,
+  dt_call_back           DATE,
+  dt_mobapp              TIMESTAMP(6),
+  mob_email              VARCHAR2(100),
+  mob_phone              VARCHAR2(100),
+  dt_land                DATE,
+  land_email             VARCHAR2(200),
+  land_phone             VARCHAR2(4000),
+  dt_drop                VARCHAR2(100 BYTE),
+  drop_phone             VARCHAR2(100 BYTE),
+  dt_complaint           DATE,
+  dt_dwto                DATE,
+  dt_dwto2               DATE,
+  dt_nintrst             DATE,
+  avail_to_call3d        CHAR(1),
+  attempt_last30d        NUMBER,
+  attempt_current        NUMBER,
+  pilot_name             VARCHAR2(50),
+  min_instalment         NUMBER
+)
+nologging;
+create index CCL_IX1 on CAMP_COMPILED_LIST (ID_CUID, SKP_CLIENT)
+  nologging;
+create index CCL_IX2 on CAMP_COMPILED_LIST (CONTRACT)
+  nologging;
+create index CCL_IX3 on CAMP_COMPILED_LIST (ID_CUID, PRIMARYM_2)
+  nologging;
+create index CCL_IX4 on CAMP_COMPILED_LIST (MOB_PHONE)
+  nologging;
+create index CCL_IX5 on CAMP_COMPILED_LIST (LAND_PHONE)
+  nologging;
+create index CCL_IX6 on CAMP_COMPILED_LIST (PRIMARYM_1)
+  nologging;
+create index CCL_IX7 on CAMP_COMPILED_LIST (GREATEST(NVL(TRUNC(DT_INTRST_INB),TO_DATE(' 1970-01-01 00:00:00', 'syyyy-mm-dd hh24:mi:ss')),NVL(TRUNC(DT_INFO_INB),TO_DATE(' 1970-01-01 00:00:00', 'syyyy-mm-dd hh24:mi:ss'))))
+  nologging;
+

@@ -1,0 +1,65 @@
+create table CAMP_ELIG_BASE
+(
+  skp_client                  NUMBER not null,
+  id_cuid                     NUMBER not null,
+  name_full                   VARCHAR2(250),
+  name_first                  VARCHAR2(250),
+  name_middle                 VARCHAR2(250),
+  name_last                   VARCHAR2(250),
+  date_birth                  DATE,
+  name_birth_place            VARCHAR2(60),
+  gender                      VARCHAR2(5),
+  code_employment_type        VARCHAR2(20),
+  code_education_type         VARCHAR2(20),
+  code_employer_industry      VARCHAR2(20),
+  main_income                 NUMBER,
+  other_income                NUMBER,
+  amt_expense_debt            NUMBER,
+  sum_amt_annuity_active      NUMBER,
+  total_paid_amount           NUMBER,
+  total_overpaid_amount       NUMBER,
+  dpd_ever                    NUMBER,
+  dpd_3m                      NUMBER,
+  dpd_actual                  NUMBER,
+  max_pilot_flag              NUMBER,
+  number_of_cl_contracts      NUMBER,
+  prev_pricing_strategy       VARCHAR2(20),
+  pricing_strategy            VARCHAR2(20),
+  valid_from                  DATE,
+  valid_to                    DATE,
+  risk_band                   VARCHAR2(20),
+  rbp_segment_temp            VARCHAR2(20),
+  interest_rate               NUMBER,
+  max_tenor                   NUMBER,
+  camp_type                   VARCHAR2(20),
+  x_sell_flag                 NUMBER,
+  score                       NUMBER,
+  annuity_limit_final_updated NUMBER,
+  ca_limit_final_updated      NUMBER,
+  priority_actual             NUMBER,
+  eligible_final_flag         NUMBER,
+  sid_result                  VARCHAR2(20),
+  pilot_name                  VARCHAR2(150),
+  score_pd                    INTEGER,
+  cnt_active_contracts        NUMBER,
+  fl_current_eligibility      VARCHAR2(150),
+  reason_not_elig             VARCHAR2(150)
+)
+partition by list (ELIGIBLE_FINAL_FLAG)
+(
+  partition P_0 values (0)
+    tablespace AP_CRM,
+  partition P_1 values (1)
+    tablespace AP_CRM,
+  partition P_X values (Default)
+    tablespace AP_CRM
+);
+create index CEB_IX01 on CAMP_ELIG_BASE (SID_RESULT, ELIGIBLE_FINAL_FLAG, PRIORITY_ACTUAL)
+  compress  nologging;
+create index CEB_IX02 on CAMP_ELIG_BASE (MOD(ID_CUID,2))
+  compress  nologging;
+create index CEB_IX03 on CAMP_ELIG_BASE (SKP_CLIENT, VALID_FROM)
+  nologging;
+create index CEB_IX1 on CAMP_ELIG_BASE (ID_CUID, CNT_ACTIVE_CONTRACTS, RISK_BAND)
+  compress  nologging;
+

@@ -1,0 +1,19 @@
+create table CAMP_BLACK_LIST
+(
+  cuid                  NUMBER not null,
+  date_block            DATE not null,
+  source                VARCHAR2(250),
+  source_identification VARCHAR2(4000),
+  block_reason          VARCHAR2(4000),
+  for_num_days          NUMBER,
+  block_forever         VARCHAR2(3),
+  status                VARCHAR2(5)
+)
+;
+create index CBL_IX01 on CAMP_BLACK_LIST (SOURCE, SOURCE_IDENTIFICATION);
+create index CBL_IX02 on CAMP_BLACK_LIST (CUID);
+alter table CAMP_BLACK_LIST
+  add constraint CBL_PK01 primary key (CUID)
+  disable
+  novalidate;
+

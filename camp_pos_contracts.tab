@@ -1,0 +1,50 @@
+create table CAMP_POS_CONTRACTS
+(
+  skp_credit_case              INTEGER not null,
+  skp_contract                 INTEGER not null,
+  skp_application              INTEGER not null,
+  skp_client                   INTEGER not null,
+  skp_employee_consultant      INTEGER,
+  text_contract_number         VARCHAR2(80) not null,
+  name_credit_status           VARCHAR2(255),
+  dtime_proposal               DATE,
+  sent_to_evaluate             DATE not null,
+  date_decision                DATE not null,
+  dtime_cancellation           DATE,
+  dtime_signature_contract     DATE,
+  dtime_activation             DATE,
+  dtime_close                  DATE,
+  dtime_payment_last           DATE,
+  due_date                     DATE,
+  flag_cancelled_automatically CHAR(1),
+  flag_cancelled_pre_approval  CHAR(1),
+  flag_deleted                 VARCHAR2(1) not null,
+  name_producer                VARCHAR2(255),
+  name_goods_type              VARCHAR2(80),
+  name_goods_category          VARCHAR2(80),
+  amt_goods_price              NUMBER,
+  amt_down_payment             NUMBER,
+  amt_credit_total             NUMBER,
+  amt_annuity                  NUMBER,
+  instalment                   INTEGER,
+  amt_fee_origination          NUMBER,
+  rate_effective_interest      NUMBER(38,10),
+  name_instalment_sched_method VARCHAR2(20),
+  amt_outstanding_principal    NUMBER,
+  code_sales_agent             VARCHAR2(90),
+  name_sales_agent             VARCHAR2(255),
+  code_salesroom               VARCHAR2(60),
+  name_salesroom               VARCHAR2(1020),
+  num_gps_latitude             NUMBER,
+  num_gps_longtitude           NUMBER,
+  code_partner                 VARCHAR2(60),
+  name_partner                 VARCHAR2(255),
+  partner_category             VARCHAR2(1020 BYTE),
+  name_sales_business_area     VARCHAR2(255),
+  name_sales_district          VARCHAR2(255)
+)
+nologging;
+create index CPC_IX01 on CAMP_POS_CONTRACTS (TRUNC(DTIME_PROPOSAL), SKP_CLIENT);
+create index CPC_IX02 on CAMP_POS_CONTRACTS (SKP_CLIENT, SKP_CREDIT_CASE);
+create index CPC_IX03 on CAMP_POS_CONTRACTS (SKP_CLIENT);
+

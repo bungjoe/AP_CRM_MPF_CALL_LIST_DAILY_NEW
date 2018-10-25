@@ -1,0 +1,92 @@
+create table LOG_CAMP_OFFER_CALL_LIST_FINAL
+(
+  log_date           DATE,
+  time_inserted      VARCHAR2(8 BYTE),
+  cuid               NUMBER(38),
+  contract_id        VARCHAR2(80),
+  first_name         VARCHAR2(150),
+  last_name          VARCHAR2(150),
+  max_credit_amount  NUMBER,
+  max_installment    NUMBER,
+  mother_maiden_name VARCHAR2(100),
+  place_of_birth     VARCHAR2(60),
+  birth_date         DATE,
+  id_ktp             VARCHAR2(50),
+  expiry_date_ktp    DATE,
+  mobile1            VARCHAR2(4000),
+  mobile2            VARCHAR2(4000),
+  email_address      VARCHAR2(255),
+  full_address       VARCHAR2(2378),
+  name_town          VARCHAR2(255),
+  name_subdistrict   VARCHAR2(255),
+  code_zip           VARCHAR2(80),
+  name_district      VARCHAR2(255),
+  info1              VARCHAR2(2000 BYTE),
+  info2              VARCHAR2(2000),
+  tzone              VARCHAR2(20 BYTE),
+  nums               NUMBER,
+  campaign_type      VARCHAR2(50),
+  first_due_date     DATE,
+  min_instalment     NUMBER,
+  mobile3            VARCHAR2(200),
+  mobile4            VARCHAR2(200),
+  info3              VARCHAR2(2000),
+  info4              VARCHAR2(2000),
+  info5              VARCHAR2(2000),
+  info6              VARCHAR2(2000),
+  info7              VARCHAR2(2000),
+  info8              VARCHAR2(2000),
+  info9              VARCHAR2(2000),
+  info10             VARCHAR2(2000)
+)
+partition by range (LOG_DATE) interval (NUMTOYMINTERVAL(1,'MONTH'))
+(
+  partition INIT_PART values less than (TO_DATE(' 2017-05-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P235814 values less than (TO_DATE(' 2017-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P243160 values less than (TO_DATE(' 2017-07-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P251743 values less than (TO_DATE(' 2017-08-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P259361 values less than (TO_DATE(' 2017-09-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P270086 values less than (TO_DATE(' 2017-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P278758 values less than (TO_DATE(' 2017-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P356925 values less than (TO_DATE(' 2017-12-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P376801 values less than (TO_DATE(' 2018-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P395240 values less than (TO_DATE(' 2018-02-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P452071 values less than (TO_DATE(' 2018-03-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P468423 values less than (TO_DATE(' 2018-04-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P493859 values less than (TO_DATE(' 2018-05-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P507074 values less than (TO_DATE(' 2018-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P516422 values less than (TO_DATE(' 2018-07-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P525798 values less than (TO_DATE(' 2018-08-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P541580 values less than (TO_DATE(' 2018-09-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P553435 values less than (TO_DATE(' 2018-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P569771 values less than (TO_DATE(' 2018-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM
+);
+create index LCOCLF_IX1 on LOG_CAMP_OFFER_CALL_LIST_FINAL (CONTRACT_ID)
+  nologging;
+create index LCOCLF_IX2 on LOG_CAMP_OFFER_CALL_LIST_FINAL (CUID)
+  nologging;
+create index LCOCLF_IX3 on LOG_CAMP_OFFER_CALL_LIST_FINAL (LOG_DATE)
+  nologging;
+create index LCOCLF_IX4 on LOG_CAMP_OFFER_CALL_LIST_FINAL (CAMPAIGN_TYPE)
+  nologging;
+create index LCOCLF_IX5 on LOG_CAMP_OFFER_CALL_LIST_FINAL (TO_CHAR(LOG_DATE,'mon-yyyy'), LOG_DATE, TIME_INSERTED, CUID);
+

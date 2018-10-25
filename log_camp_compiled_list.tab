@@ -1,0 +1,1167 @@
+create table LOG_CAMP_COMPILED_LIST
+(
+  log_date               DATE,
+  time_inserted          VARCHAR2(8 BYTE),
+  period                 DATE,
+  valid_from             DATE,
+  id_cuid                NUMBER(38),
+  skp_client             NUMBER,
+  contract               VARCHAR2(80),
+  name_salesroom         VARCHAR2(1020),
+  name_full              VARCHAR2(150),
+  name_first             VARCHAR2(150),
+  name_last              VARCHAR2(150),
+  name_birth_place       VARCHAR2(150),
+  date_birth             DATE,
+  code_employment_type   VARCHAR2(20),
+  code_employer_industry VARCHAR2(20),
+  main_income            NUMBER,
+  code_education_type    VARCHAR2(20),
+  max_tenor              NUMBER,
+  max_credit_amount      NUMBER,
+  max_instalment         NUMBER,
+  rbp_segment            VARCHAR2(20 BYTE),
+  risk_group             VARCHAR2(15 BYTE),
+  risk_score             NUMBER,
+  type                   VARCHAR2(10),
+  priority               NUMBER,
+  tdy_priority           VARCHAR2(4 BYTE),
+  first_eligibility      NUMBER,
+  tdy_eligibility        CHAR(1 BYTE),
+  name_mother            VARCHAR2(100),
+  id_ktp                 VARCHAR2(50),
+  expiry_date_ktp        DATE,
+  primarym_1             VARCHAR2(100),
+  primarym_2             VARCHAR2(100),
+  primarym_3             VARCHAR2(100),
+  primarym_4             VARCHAR2(100),
+  primarym_5             VARCHAR2(100),
+  client_email           VARCHAR2(255),
+  full_address           VARCHAR2(2378),
+  name_town              VARCHAR2(255),
+  name_subdistrict       VARCHAR2(255),
+  code_zip_code          VARCHAR2(80),
+  name_district          VARCHAR2(255),
+  dead_customer          CHAR(1 BYTE),
+  has_active_ff          CHAR(1 BYTE),
+  dt_intrst_inb          DATE,
+  dt_info_inb            DATE,
+  dt_cancel              DATE,
+  dt_reject              DATE,
+  dt_call_back           DATE,
+  dt_mobapp              TIMESTAMP(6),
+  mob_email              VARCHAR2(100),
+  mob_phone              VARCHAR2(100),
+  dt_land                DATE,
+  land_email             VARCHAR2(200),
+  land_phone             VARCHAR2(4000),
+  dt_drop                VARCHAR2(100 BYTE),
+  drop_phone             VARCHAR2(100 BYTE),
+  dt_complaint           DATE,
+  dt_dwto                DATE,
+  dt_dwto2               DATE,
+  dt_nintrst             DATE,
+  avail_to_call3d        CHAR(1 BYTE),
+  attempt_last30d        NUMBER,
+  attempt_current        NUMBER,
+  pilot_name             VARCHAR2(50),
+  min_instalment         NUMBER
+)
+partition by range (LOG_DATE) interval (NUMTODSINTERVAL(1,'DAY'))
+(
+  partition INIT_PART values less than (TO_DATE(' 2017-04-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585373 values less than (TO_DATE(' 2017-04-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585374 values less than (TO_DATE(' 2017-04-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585375 values less than (TO_DATE(' 2017-05-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585376 values less than (TO_DATE(' 2017-05-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585377 values less than (TO_DATE(' 2017-05-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585378 values less than (TO_DATE(' 2017-05-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585379 values less than (TO_DATE(' 2017-05-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585380 values less than (TO_DATE(' 2017-05-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585381 values less than (TO_DATE(' 2017-05-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585382 values less than (TO_DATE(' 2017-05-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585383 values less than (TO_DATE(' 2017-05-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585384 values less than (TO_DATE(' 2017-05-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585385 values less than (TO_DATE(' 2017-05-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585386 values less than (TO_DATE(' 2017-05-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585387 values less than (TO_DATE(' 2017-05-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585388 values less than (TO_DATE(' 2017-05-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585389 values less than (TO_DATE(' 2017-05-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585390 values less than (TO_DATE(' 2017-05-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585391 values less than (TO_DATE(' 2017-05-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585392 values less than (TO_DATE(' 2017-05-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585393 values less than (TO_DATE(' 2017-05-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585394 values less than (TO_DATE(' 2017-05-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585395 values less than (TO_DATE(' 2017-05-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585396 values less than (TO_DATE(' 2017-05-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585397 values less than (TO_DATE(' 2017-05-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585398 values less than (TO_DATE(' 2017-05-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585399 values less than (TO_DATE(' 2017-05-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585400 values less than (TO_DATE(' 2017-05-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585401 values less than (TO_DATE(' 2017-05-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585402 values less than (TO_DATE(' 2017-05-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585403 values less than (TO_DATE(' 2017-05-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585404 values less than (TO_DATE(' 2017-05-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585405 values less than (TO_DATE(' 2017-05-31 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585406 values less than (TO_DATE(' 2017-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585407 values less than (TO_DATE(' 2017-06-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585408 values less than (TO_DATE(' 2017-06-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585409 values less than (TO_DATE(' 2017-06-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585410 values less than (TO_DATE(' 2017-06-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585411 values less than (TO_DATE(' 2017-06-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585412 values less than (TO_DATE(' 2017-06-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585413 values less than (TO_DATE(' 2017-06-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585414 values less than (TO_DATE(' 2017-06-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585415 values less than (TO_DATE(' 2017-06-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585416 values less than (TO_DATE(' 2017-06-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585417 values less than (TO_DATE(' 2017-06-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585418 values less than (TO_DATE(' 2017-06-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585419 values less than (TO_DATE(' 2017-06-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585420 values less than (TO_DATE(' 2017-06-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585421 values less than (TO_DATE(' 2017-06-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585422 values less than (TO_DATE(' 2017-06-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585423 values less than (TO_DATE(' 2017-06-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585424 values less than (TO_DATE(' 2017-06-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585425 values less than (TO_DATE(' 2017-06-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585426 values less than (TO_DATE(' 2017-06-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585427 values less than (TO_DATE(' 2017-06-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585428 values less than (TO_DATE(' 2017-06-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585429 values less than (TO_DATE(' 2017-06-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585430 values less than (TO_DATE(' 2017-06-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585431 values less than (TO_DATE(' 2017-06-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585432 values less than (TO_DATE(' 2017-06-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585433 values less than (TO_DATE(' 2017-06-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585434 values less than (TO_DATE(' 2017-06-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585435 values less than (TO_DATE(' 2017-06-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585436 values less than (TO_DATE(' 2017-07-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585437 values less than (TO_DATE(' 2017-07-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585438 values less than (TO_DATE(' 2017-07-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585439 values less than (TO_DATE(' 2017-07-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585440 values less than (TO_DATE(' 2017-07-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585441 values less than (TO_DATE(' 2017-07-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585442 values less than (TO_DATE(' 2017-07-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585443 values less than (TO_DATE(' 2017-07-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585444 values less than (TO_DATE(' 2017-07-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585445 values less than (TO_DATE(' 2017-07-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585446 values less than (TO_DATE(' 2017-07-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585447 values less than (TO_DATE(' 2017-07-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585448 values less than (TO_DATE(' 2017-07-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585449 values less than (TO_DATE(' 2017-07-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585450 values less than (TO_DATE(' 2017-07-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585451 values less than (TO_DATE(' 2017-07-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585452 values less than (TO_DATE(' 2017-07-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585453 values less than (TO_DATE(' 2017-07-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585454 values less than (TO_DATE(' 2017-07-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585455 values less than (TO_DATE(' 2017-07-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585456 values less than (TO_DATE(' 2017-07-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585457 values less than (TO_DATE(' 2017-07-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585458 values less than (TO_DATE(' 2017-07-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585459 values less than (TO_DATE(' 2017-07-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585460 values less than (TO_DATE(' 2017-07-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585461 values less than (TO_DATE(' 2017-07-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585462 values less than (TO_DATE(' 2017-07-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585463 values less than (TO_DATE(' 2017-07-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585464 values less than (TO_DATE(' 2017-07-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585465 values less than (TO_DATE(' 2017-07-31 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585466 values less than (TO_DATE(' 2017-08-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585467 values less than (TO_DATE(' 2017-08-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585468 values less than (TO_DATE(' 2017-08-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585469 values less than (TO_DATE(' 2017-08-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585470 values less than (TO_DATE(' 2017-08-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585471 values less than (TO_DATE(' 2017-08-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585472 values less than (TO_DATE(' 2017-08-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585473 values less than (TO_DATE(' 2017-08-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585474 values less than (TO_DATE(' 2017-08-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585475 values less than (TO_DATE(' 2017-08-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585476 values less than (TO_DATE(' 2017-08-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585477 values less than (TO_DATE(' 2017-08-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585478 values less than (TO_DATE(' 2017-08-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585479 values less than (TO_DATE(' 2017-08-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585480 values less than (TO_DATE(' 2017-08-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585481 values less than (TO_DATE(' 2017-08-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585482 values less than (TO_DATE(' 2017-08-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585483 values less than (TO_DATE(' 2017-08-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585484 values less than (TO_DATE(' 2017-08-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585485 values less than (TO_DATE(' 2017-08-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585486 values less than (TO_DATE(' 2017-08-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585487 values less than (TO_DATE(' 2017-08-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585488 values less than (TO_DATE(' 2017-08-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585489 values less than (TO_DATE(' 2017-08-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585490 values less than (TO_DATE(' 2017-08-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585491 values less than (TO_DATE(' 2017-08-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585492 values less than (TO_DATE(' 2017-08-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585493 values less than (TO_DATE(' 2017-08-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585494 values less than (TO_DATE(' 2017-08-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585495 values less than (TO_DATE(' 2017-08-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585496 values less than (TO_DATE(' 2017-08-31 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585497 values less than (TO_DATE(' 2017-09-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585498 values less than (TO_DATE(' 2017-09-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585499 values less than (TO_DATE(' 2017-09-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585500 values less than (TO_DATE(' 2017-09-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585501 values less than (TO_DATE(' 2017-09-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585502 values less than (TO_DATE(' 2017-09-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585503 values less than (TO_DATE(' 2017-09-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585504 values less than (TO_DATE(' 2017-09-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585505 values less than (TO_DATE(' 2017-09-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585506 values less than (TO_DATE(' 2017-09-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585507 values less than (TO_DATE(' 2017-09-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585508 values less than (TO_DATE(' 2017-09-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585509 values less than (TO_DATE(' 2017-09-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585510 values less than (TO_DATE(' 2017-09-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585511 values less than (TO_DATE(' 2017-09-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585512 values less than (TO_DATE(' 2017-09-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585513 values less than (TO_DATE(' 2017-09-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585514 values less than (TO_DATE(' 2017-09-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585515 values less than (TO_DATE(' 2017-09-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585516 values less than (TO_DATE(' 2017-09-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585517 values less than (TO_DATE(' 2017-09-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585518 values less than (TO_DATE(' 2017-09-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585519 values less than (TO_DATE(' 2017-09-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585520 values less than (TO_DATE(' 2017-09-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585521 values less than (TO_DATE(' 2017-09-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585522 values less than (TO_DATE(' 2017-09-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585523 values less than (TO_DATE(' 2017-09-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585524 values less than (TO_DATE(' 2017-09-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585525 values less than (TO_DATE(' 2017-09-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585526 values less than (TO_DATE(' 2017-09-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585527 values less than (TO_DATE(' 2017-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585528 values less than (TO_DATE(' 2017-10-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585529 values less than (TO_DATE(' 2017-10-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585530 values less than (TO_DATE(' 2017-10-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585531 values less than (TO_DATE(' 2017-10-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585532 values less than (TO_DATE(' 2017-10-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585533 values less than (TO_DATE(' 2017-10-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585534 values less than (TO_DATE(' 2017-10-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585535 values less than (TO_DATE(' 2017-10-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585536 values less than (TO_DATE(' 2017-10-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585537 values less than (TO_DATE(' 2017-10-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585538 values less than (TO_DATE(' 2017-10-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585539 values less than (TO_DATE(' 2017-10-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585540 values less than (TO_DATE(' 2017-10-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585541 values less than (TO_DATE(' 2017-10-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585542 values less than (TO_DATE(' 2017-10-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585543 values less than (TO_DATE(' 2017-10-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585544 values less than (TO_DATE(' 2017-10-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585545 values less than (TO_DATE(' 2017-10-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585546 values less than (TO_DATE(' 2017-10-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585547 values less than (TO_DATE(' 2017-10-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585548 values less than (TO_DATE(' 2017-10-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585549 values less than (TO_DATE(' 2017-10-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585550 values less than (TO_DATE(' 2017-10-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585551 values less than (TO_DATE(' 2017-10-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585552 values less than (TO_DATE(' 2017-10-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585553 values less than (TO_DATE(' 2017-10-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585554 values less than (TO_DATE(' 2017-10-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585555 values less than (TO_DATE(' 2017-10-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585556 values less than (TO_DATE(' 2017-10-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585557 values less than (TO_DATE(' 2017-10-31 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585558 values less than (TO_DATE(' 2017-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585559 values less than (TO_DATE(' 2017-11-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585560 values less than (TO_DATE(' 2017-11-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585561 values less than (TO_DATE(' 2017-11-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585562 values less than (TO_DATE(' 2017-11-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585563 values less than (TO_DATE(' 2017-11-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585564 values less than (TO_DATE(' 2017-11-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585565 values less than (TO_DATE(' 2017-11-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585566 values less than (TO_DATE(' 2017-11-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585567 values less than (TO_DATE(' 2017-11-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585568 values less than (TO_DATE(' 2017-11-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585569 values less than (TO_DATE(' 2017-11-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585570 values less than (TO_DATE(' 2017-11-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585571 values less than (TO_DATE(' 2017-11-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585572 values less than (TO_DATE(' 2017-11-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585573 values less than (TO_DATE(' 2017-11-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585574 values less than (TO_DATE(' 2017-11-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585575 values less than (TO_DATE(' 2017-11-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585576 values less than (TO_DATE(' 2017-11-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585577 values less than (TO_DATE(' 2017-11-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585578 values less than (TO_DATE(' 2017-11-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585579 values less than (TO_DATE(' 2017-11-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585580 values less than (TO_DATE(' 2017-11-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585581 values less than (TO_DATE(' 2017-11-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585582 values less than (TO_DATE(' 2017-11-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585583 values less than (TO_DATE(' 2017-11-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585584 values less than (TO_DATE(' 2017-11-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585585 values less than (TO_DATE(' 2017-11-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585586 values less than (TO_DATE(' 2017-11-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585587 values less than (TO_DATE(' 2017-11-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585588 values less than (TO_DATE(' 2017-12-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585589 values less than (TO_DATE(' 2017-12-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585590 values less than (TO_DATE(' 2017-12-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585591 values less than (TO_DATE(' 2017-12-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585592 values less than (TO_DATE(' 2017-12-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585593 values less than (TO_DATE(' 2017-12-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585594 values less than (TO_DATE(' 2017-12-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585595 values less than (TO_DATE(' 2017-12-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585596 values less than (TO_DATE(' 2017-12-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585597 values less than (TO_DATE(' 2017-12-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585598 values less than (TO_DATE(' 2017-12-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585599 values less than (TO_DATE(' 2017-12-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585600 values less than (TO_DATE(' 2017-12-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585601 values less than (TO_DATE(' 2017-12-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585602 values less than (TO_DATE(' 2017-12-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585603 values less than (TO_DATE(' 2017-12-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585604 values less than (TO_DATE(' 2017-12-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585605 values less than (TO_DATE(' 2017-12-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585606 values less than (TO_DATE(' 2017-12-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585607 values less than (TO_DATE(' 2017-12-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585608 values less than (TO_DATE(' 2017-12-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585609 values less than (TO_DATE(' 2017-12-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585610 values less than (TO_DATE(' 2017-12-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585611 values less than (TO_DATE(' 2017-12-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585612 values less than (TO_DATE(' 2017-12-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585613 values less than (TO_DATE(' 2017-12-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585614 values less than (TO_DATE(' 2017-12-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585615 values less than (TO_DATE(' 2017-12-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585616 values less than (TO_DATE(' 2017-12-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585617 values less than (TO_DATE(' 2017-12-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585618 values less than (TO_DATE(' 2017-12-31 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585619 values less than (TO_DATE(' 2018-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585620 values less than (TO_DATE(' 2018-01-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585621 values less than (TO_DATE(' 2018-01-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585622 values less than (TO_DATE(' 2018-01-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585623 values less than (TO_DATE(' 2018-01-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585624 values less than (TO_DATE(' 2018-01-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585625 values less than (TO_DATE(' 2018-01-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585626 values less than (TO_DATE(' 2018-01-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585627 values less than (TO_DATE(' 2018-01-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585628 values less than (TO_DATE(' 2018-01-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585629 values less than (TO_DATE(' 2018-01-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585630 values less than (TO_DATE(' 2018-01-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585631 values less than (TO_DATE(' 2018-01-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585632 values less than (TO_DATE(' 2018-01-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585633 values less than (TO_DATE(' 2018-01-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585634 values less than (TO_DATE(' 2018-01-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585635 values less than (TO_DATE(' 2018-01-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585636 values less than (TO_DATE(' 2018-01-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585637 values less than (TO_DATE(' 2018-01-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585638 values less than (TO_DATE(' 2018-01-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585639 values less than (TO_DATE(' 2018-01-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585640 values less than (TO_DATE(' 2018-01-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585641 values less than (TO_DATE(' 2018-01-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585642 values less than (TO_DATE(' 2018-01-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585643 values less than (TO_DATE(' 2018-01-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585644 values less than (TO_DATE(' 2018-01-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585645 values less than (TO_DATE(' 2018-01-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585646 values less than (TO_DATE(' 2018-01-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585647 values less than (TO_DATE(' 2018-01-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585648 values less than (TO_DATE(' 2018-01-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585649 values less than (TO_DATE(' 2018-01-31 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585650 values less than (TO_DATE(' 2018-02-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585651 values less than (TO_DATE(' 2018-02-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585652 values less than (TO_DATE(' 2018-02-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585653 values less than (TO_DATE(' 2018-02-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585654 values less than (TO_DATE(' 2018-02-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585655 values less than (TO_DATE(' 2018-02-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585656 values less than (TO_DATE(' 2018-02-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585657 values less than (TO_DATE(' 2018-02-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585658 values less than (TO_DATE(' 2018-02-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585659 values less than (TO_DATE(' 2018-02-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585660 values less than (TO_DATE(' 2018-02-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585661 values less than (TO_DATE(' 2018-02-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585662 values less than (TO_DATE(' 2018-02-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585663 values less than (TO_DATE(' 2018-02-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585664 values less than (TO_DATE(' 2018-02-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585665 values less than (TO_DATE(' 2018-02-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585666 values less than (TO_DATE(' 2018-02-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585667 values less than (TO_DATE(' 2018-02-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585668 values less than (TO_DATE(' 2018-02-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585669 values less than (TO_DATE(' 2018-02-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585670 values less than (TO_DATE(' 2018-02-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585671 values less than (TO_DATE(' 2018-02-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585672 values less than (TO_DATE(' 2018-02-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585673 values less than (TO_DATE(' 2018-02-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585674 values less than (TO_DATE(' 2018-02-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585675 values less than (TO_DATE(' 2018-02-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585676 values less than (TO_DATE(' 2018-02-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585677 values less than (TO_DATE(' 2018-02-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585678 values less than (TO_DATE(' 2018-03-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585679 values less than (TO_DATE(' 2018-03-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585680 values less than (TO_DATE(' 2018-03-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585681 values less than (TO_DATE(' 2018-03-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585682 values less than (TO_DATE(' 2018-03-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585683 values less than (TO_DATE(' 2018-03-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585684 values less than (TO_DATE(' 2018-03-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585685 values less than (TO_DATE(' 2018-03-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585686 values less than (TO_DATE(' 2018-03-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585687 values less than (TO_DATE(' 2018-03-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585688 values less than (TO_DATE(' 2018-03-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585689 values less than (TO_DATE(' 2018-03-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585690 values less than (TO_DATE(' 2018-03-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585691 values less than (TO_DATE(' 2018-03-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585692 values less than (TO_DATE(' 2018-03-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585693 values less than (TO_DATE(' 2018-03-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585694 values less than (TO_DATE(' 2018-03-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585695 values less than (TO_DATE(' 2018-03-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585696 values less than (TO_DATE(' 2018-03-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585697 values less than (TO_DATE(' 2018-03-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585698 values less than (TO_DATE(' 2018-03-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585699 values less than (TO_DATE(' 2018-03-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585700 values less than (TO_DATE(' 2018-03-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585701 values less than (TO_DATE(' 2018-03-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585702 values less than (TO_DATE(' 2018-03-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585703 values less than (TO_DATE(' 2018-03-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585704 values less than (TO_DATE(' 2018-03-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585705 values less than (TO_DATE(' 2018-03-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585706 values less than (TO_DATE(' 2018-03-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585707 values less than (TO_DATE(' 2018-03-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585708 values less than (TO_DATE(' 2018-03-31 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585709 values less than (TO_DATE(' 2018-04-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585710 values less than (TO_DATE(' 2018-04-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585711 values less than (TO_DATE(' 2018-04-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585712 values less than (TO_DATE(' 2018-04-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585713 values less than (TO_DATE(' 2018-04-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585714 values less than (TO_DATE(' 2018-04-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585715 values less than (TO_DATE(' 2018-04-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585716 values less than (TO_DATE(' 2018-04-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585717 values less than (TO_DATE(' 2018-04-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585718 values less than (TO_DATE(' 2018-04-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585719 values less than (TO_DATE(' 2018-04-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585720 values less than (TO_DATE(' 2018-04-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585721 values less than (TO_DATE(' 2018-04-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585722 values less than (TO_DATE(' 2018-04-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585723 values less than (TO_DATE(' 2018-04-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585724 values less than (TO_DATE(' 2018-04-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585725 values less than (TO_DATE(' 2018-04-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585726 values less than (TO_DATE(' 2018-04-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585727 values less than (TO_DATE(' 2018-04-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585728 values less than (TO_DATE(' 2018-04-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585729 values less than (TO_DATE(' 2018-04-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585730 values less than (TO_DATE(' 2018-04-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585731 values less than (TO_DATE(' 2018-04-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585732 values less than (TO_DATE(' 2018-04-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585733 values less than (TO_DATE(' 2018-04-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585734 values less than (TO_DATE(' 2018-04-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585735 values less than (TO_DATE(' 2018-04-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585736 values less than (TO_DATE(' 2018-04-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585737 values less than (TO_DATE(' 2018-04-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585738 values less than (TO_DATE(' 2018-04-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585739 values less than (TO_DATE(' 2018-05-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585740 values less than (TO_DATE(' 2018-05-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585741 values less than (TO_DATE(' 2018-05-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585742 values less than (TO_DATE(' 2018-05-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585743 values less than (TO_DATE(' 2018-05-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585744 values less than (TO_DATE(' 2018-05-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585745 values less than (TO_DATE(' 2018-05-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585746 values less than (TO_DATE(' 2018-05-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585747 values less than (TO_DATE(' 2018-05-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585748 values less than (TO_DATE(' 2018-05-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585749 values less than (TO_DATE(' 2018-05-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585750 values less than (TO_DATE(' 2018-05-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585751 values less than (TO_DATE(' 2018-05-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585752 values less than (TO_DATE(' 2018-05-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585753 values less than (TO_DATE(' 2018-05-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585754 values less than (TO_DATE(' 2018-05-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585755 values less than (TO_DATE(' 2018-05-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585756 values less than (TO_DATE(' 2018-05-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585757 values less than (TO_DATE(' 2018-05-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585758 values less than (TO_DATE(' 2018-05-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585759 values less than (TO_DATE(' 2018-05-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585760 values less than (TO_DATE(' 2018-05-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585761 values less than (TO_DATE(' 2018-05-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585762 values less than (TO_DATE(' 2018-05-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585763 values less than (TO_DATE(' 2018-05-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585764 values less than (TO_DATE(' 2018-05-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585765 values less than (TO_DATE(' 2018-05-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585766 values less than (TO_DATE(' 2018-05-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585767 values less than (TO_DATE(' 2018-05-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585768 values less than (TO_DATE(' 2018-05-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585769 values less than (TO_DATE(' 2018-05-31 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585770 values less than (TO_DATE(' 2018-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585771 values less than (TO_DATE(' 2018-06-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585772 values less than (TO_DATE(' 2018-06-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585773 values less than (TO_DATE(' 2018-06-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585774 values less than (TO_DATE(' 2018-06-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585775 values less than (TO_DATE(' 2018-06-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585776 values less than (TO_DATE(' 2018-06-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585777 values less than (TO_DATE(' 2018-06-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585778 values less than (TO_DATE(' 2018-06-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585779 values less than (TO_DATE(' 2018-06-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585780 values less than (TO_DATE(' 2018-06-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585781 values less than (TO_DATE(' 2018-06-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585782 values less than (TO_DATE(' 2018-06-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585783 values less than (TO_DATE(' 2018-06-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585784 values less than (TO_DATE(' 2018-06-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585785 values less than (TO_DATE(' 2018-06-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585786 values less than (TO_DATE(' 2018-06-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585787 values less than (TO_DATE(' 2018-06-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585788 values less than (TO_DATE(' 2018-06-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585789 values less than (TO_DATE(' 2018-06-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585790 values less than (TO_DATE(' 2018-06-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585791 values less than (TO_DATE(' 2018-06-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585792 values less than (TO_DATE(' 2018-06-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585793 values less than (TO_DATE(' 2018-06-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585794 values less than (TO_DATE(' 2018-06-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585795 values less than (TO_DATE(' 2018-06-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585796 values less than (TO_DATE(' 2018-06-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585797 values less than (TO_DATE(' 2018-06-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585798 values less than (TO_DATE(' 2018-06-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585799 values less than (TO_DATE(' 2018-06-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585800 values less than (TO_DATE(' 2018-07-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585801 values less than (TO_DATE(' 2018-07-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585802 values less than (TO_DATE(' 2018-07-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585803 values less than (TO_DATE(' 2018-07-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585804 values less than (TO_DATE(' 2018-07-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585805 values less than (TO_DATE(' 2018-07-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585806 values less than (TO_DATE(' 2018-07-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585807 values less than (TO_DATE(' 2018-07-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585808 values less than (TO_DATE(' 2018-07-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585809 values less than (TO_DATE(' 2018-07-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585810 values less than (TO_DATE(' 2018-07-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585811 values less than (TO_DATE(' 2018-07-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585812 values less than (TO_DATE(' 2018-07-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585813 values less than (TO_DATE(' 2018-07-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585814 values less than (TO_DATE(' 2018-07-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585815 values less than (TO_DATE(' 2018-07-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585816 values less than (TO_DATE(' 2018-07-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585817 values less than (TO_DATE(' 2018-07-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585818 values less than (TO_DATE(' 2018-07-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585819 values less than (TO_DATE(' 2018-07-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585820 values less than (TO_DATE(' 2018-07-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585821 values less than (TO_DATE(' 2018-07-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585822 values less than (TO_DATE(' 2018-07-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585823 values less than (TO_DATE(' 2018-07-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585824 values less than (TO_DATE(' 2018-07-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585825 values less than (TO_DATE(' 2018-07-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585826 values less than (TO_DATE(' 2018-07-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585827 values less than (TO_DATE(' 2018-07-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585828 values less than (TO_DATE(' 2018-07-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585829 values less than (TO_DATE(' 2018-07-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585830 values less than (TO_DATE(' 2018-07-31 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585831 values less than (TO_DATE(' 2018-08-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585832 values less than (TO_DATE(' 2018-08-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585833 values less than (TO_DATE(' 2018-08-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585834 values less than (TO_DATE(' 2018-08-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585835 values less than (TO_DATE(' 2018-08-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585836 values less than (TO_DATE(' 2018-08-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585837 values less than (TO_DATE(' 2018-08-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585838 values less than (TO_DATE(' 2018-08-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585839 values less than (TO_DATE(' 2018-08-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585840 values less than (TO_DATE(' 2018-08-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585841 values less than (TO_DATE(' 2018-08-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585842 values less than (TO_DATE(' 2018-08-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585843 values less than (TO_DATE(' 2018-08-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585844 values less than (TO_DATE(' 2018-08-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585845 values less than (TO_DATE(' 2018-08-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585846 values less than (TO_DATE(' 2018-08-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585847 values less than (TO_DATE(' 2018-08-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585848 values less than (TO_DATE(' 2018-08-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585849 values less than (TO_DATE(' 2018-08-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585850 values less than (TO_DATE(' 2018-08-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585851 values less than (TO_DATE(' 2018-08-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585852 values less than (TO_DATE(' 2018-08-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585853 values less than (TO_DATE(' 2018-08-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585854 values less than (TO_DATE(' 2018-08-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585855 values less than (TO_DATE(' 2018-08-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585856 values less than (TO_DATE(' 2018-08-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585857 values less than (TO_DATE(' 2018-08-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585858 values less than (TO_DATE(' 2018-08-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585859 values less than (TO_DATE(' 2018-08-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585860 values less than (TO_DATE(' 2018-08-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585861 values less than (TO_DATE(' 2018-08-31 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585862 values less than (TO_DATE(' 2018-09-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585863 values less than (TO_DATE(' 2018-09-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585864 values less than (TO_DATE(' 2018-09-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585865 values less than (TO_DATE(' 2018-09-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585866 values less than (TO_DATE(' 2018-09-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585867 values less than (TO_DATE(' 2018-09-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585868 values less than (TO_DATE(' 2018-09-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585869 values less than (TO_DATE(' 2018-09-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585870 values less than (TO_DATE(' 2018-09-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585871 values less than (TO_DATE(' 2018-09-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585872 values less than (TO_DATE(' 2018-09-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585873 values less than (TO_DATE(' 2018-09-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585874 values less than (TO_DATE(' 2018-09-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585875 values less than (TO_DATE(' 2018-09-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585876 values less than (TO_DATE(' 2018-09-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585877 values less than (TO_DATE(' 2018-09-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585878 values less than (TO_DATE(' 2018-09-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585879 values less than (TO_DATE(' 2018-09-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585880 values less than (TO_DATE(' 2018-09-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585881 values less than (TO_DATE(' 2018-09-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585882 values less than (TO_DATE(' 2018-09-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585883 values less than (TO_DATE(' 2018-09-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585884 values less than (TO_DATE(' 2018-09-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585885 values less than (TO_DATE(' 2018-09-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585886 values less than (TO_DATE(' 2018-09-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585887 values less than (TO_DATE(' 2018-09-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585888 values less than (TO_DATE(' 2018-09-27 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585889 values less than (TO_DATE(' 2018-09-28 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585890 values less than (TO_DATE(' 2018-09-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585891 values less than (TO_DATE(' 2018-09-30 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585892 values less than (TO_DATE(' 2018-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585893 values less than (TO_DATE(' 2018-10-02 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585894 values less than (TO_DATE(' 2018-10-03 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585895 values less than (TO_DATE(' 2018-10-04 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585896 values less than (TO_DATE(' 2018-10-05 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585897 values less than (TO_DATE(' 2018-10-06 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585898 values less than (TO_DATE(' 2018-10-07 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585899 values less than (TO_DATE(' 2018-10-08 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585900 values less than (TO_DATE(' 2018-10-09 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585901 values less than (TO_DATE(' 2018-10-10 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585902 values less than (TO_DATE(' 2018-10-11 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585903 values less than (TO_DATE(' 2018-10-12 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585904 values less than (TO_DATE(' 2018-10-13 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585905 values less than (TO_DATE(' 2018-10-14 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585906 values less than (TO_DATE(' 2018-10-15 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585907 values less than (TO_DATE(' 2018-10-16 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585908 values less than (TO_DATE(' 2018-10-17 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585909 values less than (TO_DATE(' 2018-10-18 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585910 values less than (TO_DATE(' 2018-10-19 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585911 values less than (TO_DATE(' 2018-10-20 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585912 values less than (TO_DATE(' 2018-10-21 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585913 values less than (TO_DATE(' 2018-10-22 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585914 values less than (TO_DATE(' 2018-10-23 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P585915 values less than (TO_DATE(' 2018-10-24 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P586333 values less than (TO_DATE(' 2018-10-25 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P586654 values less than (TO_DATE(' 2018-10-26 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM
+);
+create index LCPL_IX01 on LOG_CAMP_COMPILED_LIST (LOG_DATE, TIME_INSERTED, ID_CUID, SKP_CLIENT)
+  nologging;
+

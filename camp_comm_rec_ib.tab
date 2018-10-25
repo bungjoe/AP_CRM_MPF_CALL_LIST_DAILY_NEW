@@ -1,0 +1,43 @@
+create table CAMP_COMM_REC_IB
+(
+  date_call                      DATE,
+  dtime_inserted                 DATE not null,
+  skf_communication_record       INTEGER not null,
+  skp_client                     INTEGER not null,
+  skp_credit_case                INTEGER,
+  skp_communication_channel      INTEGER not null,
+  code_channel                   VARCHAR2(150) not null,
+  name_communication_channel     VARCHAR2(250),
+  skp_communication_type         INTEGER not null,
+  code_type_code                 VARCHAR2(150) not null,
+  name_communication_type        VARCHAR2(250),
+  skp_communication_subtype      INTEGER not null,
+  code_subtype                   VARCHAR2(150),
+  name_communication_subtype     VARCHAR2(250),
+  skp_comm_subtype_specif        NUMBER,
+  code_comm_subtype_specif       VARCHAR2(150),
+  name_comm_subtype_specif       VARCHAR2(250),
+  skp_comm_subtype_sub_specif    INTEGER,
+  code_comm_subtype_sub_specif   VARCHAR2(150),
+  name_comm_subtype_sub_specif   VARCHAR2(250),
+  skp_communication_status       INTEGER not null,
+  code_status                    VARCHAR2(150),
+  name_communication_status      VARCHAR2(250),
+  skp_communication_result_type  INTEGER not null,
+  code_result_type               VARCHAR2(150),
+  name_communication_result_type VARCHAR2(250),
+  text_note                      VARCHAR2(2100),
+  text_contact                   VARCHAR2(255),
+  employee_number                VARCHAR2(50),
+  common_name                    VARCHAR2(100)
+)
+nologging;
+create index CAMP_COMM_REC_IB_IX1 on CAMP_COMM_REC_IB (NVL(SKP_COMMUNICATION_CHANNEL,(-1)), NVL(SKP_COMMUNICATION_TYPE,(-1)), NVL(SKP_COMMUNICATION_SUBTYPE,(-1)), NVL(SKP_COMM_SUBTYPE_SPECIF,(-1)), NVL(SKP_COMM_SUBTYPE_SUB_SPECIF,(-1)), NVL(SKP_COMMUNICATION_STATUS,(-1)), NVL(SKP_COMMUNICATION_RESULT_TYPE,(-1)))
+  nologging;
+create index CAMP_COMM_REC_IB_IX2 on CAMP_COMM_REC_IB (DATE_CALL, CODE_SUBTYPE, SKP_COMMUNICATION_RESULT_TYPE, CODE_STATUS)
+  nologging;
+create index CAMP_COMM_REC_IB_IX5 on CAMP_COMM_REC_IB (SKP_CREDIT_CASE, SKP_COMMUNICATION_CHANNEL, SKP_COMMUNICATION_TYPE, SKP_COMMUNICATION_SUBTYPE, SKP_COMM_SUBTYPE_SPECIF, SKP_COMM_SUBTYPE_SUB_SPECIF, SKP_COMMUNICATION_STATUS, SKP_COMMUNICATION_RESULT_TYPE)
+  nologging;
+alter table CAMP_COMM_REC_IB
+  add constraint CCRI_PK primary key (SKF_COMMUNICATION_RECORD, SKP_CLIENT);
+

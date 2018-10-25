@@ -1,0 +1,43 @@
+create table CAMP_CLIENT_IDENTITY
+(
+  skp_client             NUMBER not null,
+  id_cuid                NUMBER not null,
+  name_full              VARCHAR2(100),
+  name_first             VARCHAR2(30),
+  name_middle            VARCHAR2(30),
+  name_last              VARCHAR2(30),
+  name_mother            VARCHAR2(100),
+  date_birth             DATE,
+  name_birth_place       VARCHAR2(60),
+  gender                 VARCHAR2(80),
+  code_religion          VARCHAR2(80 BYTE),
+  code_employment_type   VARCHAR2(20),
+  code_education_type    VARCHAR2(20),
+  code_employer_industry VARCHAR2(20),
+  family_status          VARCHAR2(140),
+  dependent_person       NUMBER,
+  main_income            NUMBER,
+  other_income           NUMBER,
+  amt_expense_debt       NUMBER,
+  sum_amt_annuity_active NUMBER,
+  total_paid_amount      NUMBER,
+  total_overpaid_amount  NUMBER,
+  id_ktp                 VARCHAR2(50),
+  expiry_date_ktp        DATE,
+  client_email           VARCHAR2(255),
+  primarym_1             VARCHAR2(1000),
+  primarym_2             VARCHAR2(1000),
+  primarym_3             VARCHAR2(1000),
+  primarym_4             VARCHAR2(1000),
+  primarym_5             VARCHAR2(1000),
+  full_address           VARCHAR2(2378),
+  name_town              VARCHAR2(255),
+  name_subdistrict       VARCHAR2(255),
+  code_zip_code          VARCHAR2(80),
+  name_district          VARCHAR2(255),
+  dead_customer          CHAR(1 BYTE)
+)
+nologging;
+create index CCI_IX1 on CAMP_CLIENT_IDENTITY (SKP_CLIENT);
+create index CCI_IX2 on CAMP_CLIENT_IDENTITY (ID_CUID);
+

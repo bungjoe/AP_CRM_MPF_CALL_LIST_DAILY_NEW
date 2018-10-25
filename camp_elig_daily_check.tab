@@ -1,0 +1,31 @@
+create table CAMP_ELIG_DAILY_CHECK
+(
+  campaign_id         VARCHAR2(4 BYTE),
+  id_cuid             NUMBER(38),
+  max_credit_amount   NUMBER,
+  max_annuity         NUMBER,
+  validity_period     VARCHAR2(4 BYTE),
+  dpd_history         NUMBER(38),
+  dpd_12_ms           NUMBER(38),
+  dpd_3_ms            NUMBER(38),
+  type                VARCHAR2(10),
+  priority            VARCHAR2(4 BYTE),
+  campaign_type       VARCHAR2(10 BYTE),
+  date_valid_from     DATE,
+  date_valid_to       DATE,
+  sid_result          VARCHAR2(15 BYTE),
+  score               NUMBER,
+  risk_group          VARCHAR2(15 BYTE),
+  rbp_segment         VARCHAR2(20 BYTE),
+  lost_elig_reason    VARCHAR2(24 BYTE),
+  date_check          DATE,
+  flag_still_eligible CHAR(1 BYTE)
+)
+nologging;
+create index CAMP_ELIG_DAILY_CHECK_IX1 on CAMP_ELIG_DAILY_CHECK (ID_CUID)
+  nologging;
+create index CAMP_ELIG_DAILY_CHECK_IX2 on CAMP_ELIG_DAILY_CHECK (FLAG_STILL_ELIGIBLE)
+  nologging;
+create index CEDC_IX1 on CAMP_ELIG_DAILY_CHECK (ID_CUID, FLAG_STILL_ELIGIBLE)
+  compress;
+

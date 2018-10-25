@@ -1,0 +1,105 @@
+create table LOG_CAMP_ELIG_BASE
+(
+  log_date                    DATE,
+  time_inserted               VARCHAR2(8 BYTE),
+  skp_client                  NUMBER,
+  id_cuid                     NUMBER,
+  name_full                   VARCHAR2(250),
+  name_first                  VARCHAR2(250),
+  name_middle                 VARCHAR2(250),
+  name_last                   VARCHAR2(250),
+  date_birth                  DATE,
+  name_birth_place            VARCHAR2(60),
+  gender                      VARCHAR2(5),
+  code_employment_type        VARCHAR2(20),
+  code_education_type         VARCHAR2(20),
+  code_employer_industry      VARCHAR2(20),
+  main_income                 NUMBER,
+  other_income                NUMBER,
+  amt_expense_debt            NUMBER,
+  sum_amt_annuity_active      NUMBER,
+  total_paid_amount           NUMBER,
+  total_overpaid_amount       NUMBER,
+  dpd_ever                    NUMBER,
+  dpd_3m                      NUMBER,
+  dpd_actual                  NUMBER,
+  max_pilot_flag              NUMBER,
+  number_of_cl_contracts      NUMBER,
+  prev_pricing_strategy       VARCHAR2(20),
+  pricing_strategy            VARCHAR2(20),
+  valid_from                  DATE,
+  valid_to                    DATE,
+  risk_band                   VARCHAR2(20),
+  rbp_segment_temp            VARCHAR2(20),
+  interest_rate               NUMBER,
+  max_tenor                   NUMBER,
+  camp_type                   VARCHAR2(20),
+  x_sell_flag                 NUMBER,
+  score                       NUMBER,
+  annuity_limit_final_updated NUMBER,
+  ca_limit_final_updated      NUMBER,
+  priority_actual             NUMBER,
+  eligible_final_flag         NUMBER,
+  sid_result                  VARCHAR2(20),
+  pilot_name                  VARCHAR2(150 BYTE),
+  score_pd                    INTEGER,
+  cnt_active_contracts        NUMBER,
+  fl_current_eligibility      VARCHAR2(150),
+  reason_not_elig             VARCHAR2(150)
+)
+partition by range (LOG_DATE) interval (NUMTOYMINTERVAL(1,'MONTH'))
+(
+  partition MARCH_2017_EOM values less than (TO_DATE(' 2017-04-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition APR_2017 values less than (TO_DATE(' 2017-05-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition MAY_2017 values less than (TO_DATE(' 2017-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition JUNE_2017 values less than (TO_DATE(' 2017-07-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition JULY_2017 values less than (TO_DATE(' 2017-08-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition AUGUST_2017 values less than (TO_DATE(' 2017-09-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SEPT_2017 values less than (TO_DATE(' 2017-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition OCT_2017 values less than (TO_DATE(' 2017-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition NOV_2017 values less than (TO_DATE(' 2017-12-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition DEC_2017 values less than (TO_DATE(' 2018-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition JAN_2018 values less than (TO_DATE(' 2018-02-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition FEB_2018 values less than (TO_DATE(' 2018-03-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition MAR_2018 values less than (TO_DATE(' 2018-04-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition APR_2018 values less than (TO_DATE(' 2018-05-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition MAY_2018 values less than (TO_DATE(' 2018-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition JUNE_2018 values less than (TO_DATE(' 2018-07-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition JULY_2018 values less than (TO_DATE(' 2018-08-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition AUGUST_2018 values less than (TO_DATE(' 2018-09-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SEPT_2018_SOM values less than (TO_DATE(' 2018-09-29 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SEPT_2018 values less than (TO_DATE(' 2018-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM,
+  partition SYS_P569706 values less than (TO_DATE(' 2018-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace AP_CRM
+);
+create index LOG_CAMP_ELIG_BASE_IX1 on LOG_CAMP_ELIG_BASE (LOG_DATE, TIME_INSERTED)
+  nologging  local;
+create index LOG_CAMP_ELIG_BASE_IX2 on LOG_CAMP_ELIG_BASE (LAST_DAY(LOG_DATE) DESC)
+  nologging;
+create index LOG_CAMP_ELIG_BASE_IX3 on LOG_CAMP_ELIG_BASE (LOG_DATE, ELIGIBLE_FINAL_FLAG, PRIORITY_ACTUAL)
+  nologging  local;
+create index LOG_CAMP_ELIG_BASE_IX4 on LOG_CAMP_ELIG_BASE (ID_CUID)
+  nologging;
+create index LOG_CAMP_ELIG_BASE_IX5 on LOG_CAMP_ELIG_BASE (LOG_DATE, SKP_CLIENT)
+  nologging;
+

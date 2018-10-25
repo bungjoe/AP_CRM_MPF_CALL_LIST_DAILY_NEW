@@ -1,0 +1,8 @@
+create global temporary table GTT_CAMP_ATMPT_CM
+(
+  date_call DATE,
+  cuid      VARCHAR2(50 BYTE),
+  attempt   NUMBER
+)
+on commit preserve rows;
+

@@ -1,0 +1,15 @@
+create table LOG_CAMP_ALT_NUM_CL
+(
+  log_date      DATE,
+  time_inserted VARCHAR2(8),
+  cuid          NUMBER(38),
+  info1         VARCHAR2(2000 BYTE),
+  info2         VARCHAR2(2000),
+  alt_number    VARCHAR2(100)
+)
+;
+create index LCANC_IX01 on LOG_CAMP_ALT_NUM_CL (LOG_DATE, TIME_INSERTED)
+  nologging;
+create index LCANC_IX02 on LOG_CAMP_ALT_NUM_CL (CUID, ALT_NUMBER)
+  nologging;
+

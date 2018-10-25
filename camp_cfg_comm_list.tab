@@ -1,0 +1,33 @@
+create table CAMP_CFG_COMM_LIST
+(
+  skp_communication_channel      NUMBER,
+  name_channel                   VARCHAR2(250),
+  skp_communication_type         NUMBER,
+  code_communication_type        VARCHAR2(250),
+  name_communication_type        VARCHAR2(250),
+  skp_communication_subtype      NUMBER,
+  code_communication_subtype     VARCHAR2(250),
+  name_communication_subtype     VARCHAR2(250),
+  skp_comm_subtype_specif        NUMBER,
+  code_comm_subtype_specif       VARCHAR2(250),
+  name_comm_subtype_specif       VARCHAR2(250),
+  skp_comm_subtype_sub_specif    NUMBER,
+  code_comm_subtype_sub_specif   VARCHAR2(250),
+  name_comm_subtye_sub_specif    VARCHAR2(250),
+  skp_communication_status       NUMBER,
+  code_communication_status      VARCHAR2(250),
+  name_communication_status      VARCHAR2(250),
+  skp_communication_result_type  NUMBER,
+  code_communication_result_type VARCHAR2(250),
+  name_communication_result_type VARCHAR2(250),
+  name_campaign                  VARCHAR2(250),
+  name_sub_campaign              VARCHAR2(250),
+  logic_group                    VARCHAR2(250),
+  action                         VARCHAR2(50),
+  ignore_callback                VARCHAR2(5),
+  require_tickets                VARCHAR2(1),
+  delay_days                     NUMBER,
+  active                         VARCHAR2(1)
+)
+nologging;
+

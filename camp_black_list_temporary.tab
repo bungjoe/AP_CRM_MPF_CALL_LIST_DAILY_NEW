@@ -1,0 +1,14 @@
+create table CAMP_BLACK_LIST_TEMPORARY
+(
+  cuid                  NUMBER not null,
+  date_block            DATE not null,
+  source                VARCHAR2(250 BYTE),
+  source_identification VARCHAR2(500 BYTE),
+  block_reason          VARCHAR2(4000 BYTE),
+  for_num_days          NUMBER,
+  block_forever         VARCHAR2(3 BYTE),
+  status                VARCHAR2(5 BYTE)
+)
+;
+create index CBLT_IX01 on CAMP_BLACK_LIST_TEMPORARY (CUID, SOURCE_IDENTIFICATION, SOURCE);
+

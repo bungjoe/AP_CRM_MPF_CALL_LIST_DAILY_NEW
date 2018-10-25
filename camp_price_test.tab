@@ -1,0 +1,10 @@
+create table CAMP_PRICE_TEST
+(
+  campaign_id   VARCHAR2(7) not null,
+  product_code  VARCHAR2(10),
+  prev_interest NUMBER(8,2),
+  prev_limit    NUMBER,
+  prev_tenor    NUMBER
+)
+;
+

@@ -1,0 +1,38 @@
+create table CAMP_FF_COMM_REC
+(
+  date_call                      DATE,
+  dtime_inserted                 DATE,
+  skf_communication_record       INTEGER,
+  skp_client                     INTEGER,
+  skp_credit_case                INTEGER,
+  skp_communication_channel      INTEGER,
+  code_channel                   VARCHAR2(150),
+  name_communication_channel     VARCHAR2(255),
+  skp_communication_type         INTEGER,
+  code_type_code                 VARCHAR2(150),
+  name_communication_type        VARCHAR2(255),
+  skp_communication_subtype      INTEGER,
+  code_subtype                   VARCHAR2(150),
+  name_communication_subtype     VARCHAR2(255),
+  skp_comm_subtype_specif        NUMBER,
+  code_comm_subtype_specif       VARCHAR2(150),
+  name_comm_subtype_specif       VARCHAR2(255),
+  skp_comm_subtype_sub_specif    INTEGER,
+  code_comm_subtype_sub_specif   VARCHAR2(150),
+  name_comm_subtype_sub_specif   VARCHAR2(255),
+  skp_communication_status       INTEGER,
+  code_status                    VARCHAR2(150),
+  name_communication_status      VARCHAR2(255),
+  skp_communication_result_type  INTEGER,
+  code_result_type               VARCHAR2(150),
+  name_communication_result_type VARCHAR2(255),
+  text_note                      VARCHAR2(4000),
+  text_contact                   VARCHAR2(255),
+  employee_number                VARCHAR2(50),
+  common_name                    VARCHAR2(250)
+)
+;
+create unique index CFCR_IX01 on CAMP_FF_COMM_REC (SKP_CLIENT, SKP_CREDIT_CASE, SKF_COMMUNICATION_RECORD);
+create index CFCR_IX02 on CAMP_FF_COMM_REC (DATE_CALL, DTIME_INSERTED);
+create index CFCR_IX03 on CAMP_FF_COMM_REC (NVL(SKP_COMMUNICATION_CHANNEL,(-1)), NVL(SKP_COMMUNICATION_TYPE,(-1)), NVL(SKP_COMMUNICATION_SUBTYPE,(-1)), NVL(SKP_COMM_SUBTYPE_SPECIF,(-1)), NVL(SKP_COMM_SUBTYPE_SUB_SPECIF,(-1)), NVL(SKP_COMMUNICATION_STATUS,(-1)), NVL(SKP_COMMUNICATION_RESULT_TYPE,(-1)));
+

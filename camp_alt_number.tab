@@ -1,0 +1,15 @@
+create table CAMP_ALT_NUMBER
+(
+  id_cuid            VARCHAR2(25) not null,
+  skp_client         NUMBER,
+  text_contact       VARCHAR2(100) not null,
+  last_call_date     DATE,
+  last_call_result   VARCHAR2(100),
+  last_disp_code     VARCHAR2(250),
+  fail_attempt_count NUMBER,
+  flag_status        VARCHAR2(1)
+)
+;
+alter table CAMP_ALT_NUMBER
+  add constraint CAN_PX01 primary key (ID_CUID, TEXT_CONTACT);
+

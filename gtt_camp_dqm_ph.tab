@@ -1,0 +1,12 @@
+create global temporary table GTT_CAMP_DQM_PH
+(
+  id_cuid     NUMBER not null,
+  dqm_mobile1 VARCHAR2(1020),
+  dqm_mobile2 VARCHAR2(1020),
+  dqm_mobile3 VARCHAR2(1020),
+  dqm_mobile4 VARCHAR2(1020),
+  dqm_mobile5 VARCHAR2(1020)
+)
+on commit preserve rows;
+create index GCDP_IX01 on GTT_CAMP_DQM_PH (ID_CUID);
+

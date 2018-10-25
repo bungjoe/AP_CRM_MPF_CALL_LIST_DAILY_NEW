@@ -1,0 +1,18 @@
+create table CAMP_COMM_RES_PART
+(
+  skf_comm_result_part     INTEGER not null,
+  skf_communication_record INTEGER not null,
+  code_comm_result_part    VARCHAR2(30) not null,
+  text_value               VARCHAR2(2000) not null,
+  dtime_inserted           DATE not null
+)
+nologging;
+create index CAMP_COMM_RES_PART_IX1 on CAMP_COMM_RES_PART (SKF_COMMUNICATION_RECORD)
+  nologging;
+create index CAMP_COMM_RES_PART_IX2 on CAMP_COMM_RES_PART (CODE_COMM_RESULT_PART)
+  nologging;
+create index CAMP_COMM_RES_PART_IX3 on CAMP_COMM_RES_PART (DTIME_INSERTED)
+  nologging;
+alter table CAMP_COMM_RES_PART
+  add constraint CCRP_PK primary key (SKF_COMM_RESULT_PART);
+
