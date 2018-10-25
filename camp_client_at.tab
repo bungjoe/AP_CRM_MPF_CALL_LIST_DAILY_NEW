@@ -1,0 +1,37 @@
+create table CAMP_CLIENT_AT
+(
+  skf_campaign_client    INTEGER not null,
+  code_source_system     VARCHAR2(10) not null,
+  id_source              VARCHAR2(30) not null,
+  date_effective         DATE not null,
+  skp_proc_inserted      INTEGER not null,
+  skp_proc_updated       INTEGER not null,
+  flag_deleted           VARCHAR2(1) not null,
+  skp_campaign           INTEGER not null,
+  skp_client             INTEGER not null,
+  skp_credit_case        INTEGER not null,
+  skp_goods_type         INTEGER not null,
+  skp_marketing_action   INTEGER not null,
+  id_campaign            VARCHAR2(20) not null,
+  code_segment           VARCHAR2(20) not null,
+  code_campaign_type     VARCHAR2(20) not null,
+  code_campaign_sub_type VARCHAR2(20) not null,
+  code_product_type      VARCHAR2(3) not null,
+  name_offer             VARCHAR2(255) not null,
+  flag_offer             VARCHAR2(1) not null,
+  amt_credit_max         NUMBER(19,2),
+  amt_annuity_max        NUMBER(19,2),
+  amt_down_payment_min   NUMBER(19,2),
+  date_valid_from        DATE not null,
+  date_valid_to          DATE not null,
+  flag_responded         VARCHAR2(1) not null,
+  skp_campaign_subtype   INTEGER not null,
+  skp_campaign_type      INTEGER not null,
+  cnt_campaign_client    NUMBER
+)
+;
+create index CCA_IX01 on CAMP_CLIENT_AT (SKP_CLIENT)
+  nologging;
+create index CCA_IX02 on CAMP_CLIENT_AT (LOWER(FLAG_DELETED), NVL(SKP_CLIENT,(-99999)))
+  compress  nologging;
+
