@@ -22,7 +22,7 @@ as
         select distinct skp_client from AP_CRM.V_CAMP_MPF_ACTIVE vcam where vcam.create_date >=  trunc(add_months(sysdate,-10))
     )
     and text_credit_status_reason in ('LAP_CANCEL')
-    group by SKP_CLIENT,NAME_CREDIT_STATUS
+    group by SKP_CLIENT,NAME_CREDIT_STATUS, ID_CUID
 ),
 delay as
 (
