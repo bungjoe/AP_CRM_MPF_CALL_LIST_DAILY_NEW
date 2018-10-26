@@ -24,8 +24,6 @@ BEGIN
     /********************************************* update filter on 7 May 2017 - Joeh ******************************************************/
     with w$1 as
 		(
-/*		     select \*+ MATERIALIZE *\ cuid from camp_ff_ndt
-				 union all*/
 		     select /*+ MATERIALIZE */ trim(nvl(cuid,'-1')) from camp_ocs_mpf_offer where (/* call_result = 33 or */ record_type in (5,6)) and extracted_date >= trunc(sysdate-1)
 		),
 		bcl as
@@ -33,7 +31,6 @@ BEGIN
         select distinct tcl.cuid,  contract_id,  
         tcl.first_name, 
         CASE WHEN SMS.ID_CUID IS NOT NULL THEN (CASE WHEN tcl.LAST_NAME IS NOT NULL THEN 'Toll Free, ' || tcl.LAST_NAME ELSE 'Toll Free' END) ELSE tcl.LAST_NAME END LAST_NAME,
-        --tcl.last_name,
         tcl.MAX_CREDIT_AMOUNT,
         tcl.max_installment, 
         tcl.MOTHER_MAIDEN_NAME, tcl.PLACE_OF_BIRTH, tcl.BIRTH_DATE,
@@ -75,8 +72,6 @@ BEGIN
         left join ap_Crm.camp_tzone_dist_map tzo on lower(tcl.name_district) = lower(tzo.name_district)
         LEFT JOIN AP_CRM.CAMP_SMS_FF_BASE SMS ON SMS.CAMPAIGN_ID = TO_CHAR(SYSDATE, 'YYMM') AND SMS.CALL_TO_ACTION = 'LANDING' AND TCL.CUID = SMS.ID_CUID
         where lower(info2) not like 'do not call%' 
-          --and tcl.cuid not in (select trim(nvl(cuid,'-1')) from camp_ocs_mpf_offer where (/* call_result = 33 or */ record_type in (5,6)) and extracted_date >= trunc(sysdate-1))
-					--and tcl.cuid not in (select cuid from camp_v_attmpt_last_60d_ndt)
 					and tcl.cuid not in (select cuid from w$1)
     ),
     tcl as
@@ -102,7 +97,7 @@ BEGIN
          else info1
     end  info1, 
     info2, 
-    tzone, row_order nums, 'OFFER_REGULAR' campaign_type, first_due_Date, min_instalment, mobile3, mobile4, info3, info4, info5, info6, info7, info8, info9, info10
+    tzone, row_order nums, 'OFFER_REGULAR' campaign_type, first_due_Date, min_instalment, mobile3, mobile4, info3, info4, info5, info6, info7, info8, info9, info10, trunc(sysdate)
     from
     (   /* (order by timezone, channel, max_credit_amount, priority, attempt) */
         select az.*, row_number() over (order by az.nums) row_order from
@@ -152,11 +147,10 @@ BEGIN
            ,cci.name_mother, cci.name_birth_place, cci.date_birth, cci.id_ktp
            ,cci.expiry_date_ktp, phone.Phone1, phone.Phone2, mail.email, cci.full_address, cci.name_town, cci.name_subdistrict, cci.code_zip_code
            ,cci.name_district
---           , case when md.loan_purpose_desc is not null then ceb.rbp_segment_temp || ', My Dream : ' || nvl(md.loan_purpose_desc,'') else ceb.rbp_segment_temp end info1
            , case when md.loan_purpose_desc is not null then 'My Dream : ' || nvl(md.loan_purpose_desc,'') else '' end info1
            , '6.Follow Up - In 1stBOD for ' || to_char(trunc(sysdate) - trunc(dtime_pre_process)) || ' days' info2
            , nvl(tzo.tzone,'WIB')
-           , row_number() over (order by (trunc(sysdate) - trunc(dtime_pre_process)) desc) nums, 'OFFER_REGULAR' campaign_type, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL 
+           , row_number() over (order by (trunc(sysdate) - trunc(dtime_pre_process)) desc) nums, 'OFFER_REGULAR' campaign_type, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, trunc(sysdate) 
     from camp_mpf_contracts cmc
     left join camp_client_identity cci on cmc.skp_client = cci.skp_client
     left join camp_elig_base ceb on cci.id_cuid = ceb.id_cuid
@@ -184,18 +178,6 @@ BEGIN
     AP_PUBLIC.CORE_LOG_PKG.pEnd ;
     commit;    
     pStats('CAMP_OFFER_CALL_LIST_FINAL');
-    
-
-    
-/*    AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:CAMP_PRICE_TEST_MANUAL_CALL');
-    insert \*+ APPEND *\ into AP_CRM.CAMP_PRICE_TEST_MANUAL_CALL
-    SELECT SYSDATE DTIME_INSERTED, FIN.* FROM AP_CRM.CAMP_OFFER_CALL_LIST_FINAL FIN 
-    WHERE LOWER(SUBSTR(LAST_NAME, 1, 10)) = 'price test' 
-          and cuid not in (select cuid from AP_CRM.CAMP_PRICE_TEST_MANUAL_CALL)
-          and ROWNUM <= 20;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd;
-    commit;    
-    pStats('CAMP_PRICE_TEST_MANUAL_CALL');*/
     
     AP_PUBLIC.CORE_LOG_PKG.pStart('ins:log_camp_alt_num_cl');
     insert into log_camp_alt_num_cl
@@ -247,80 +229,10 @@ BEGIN
     )src on (src.id_cuid = tgt.cuid)
     when matched then update set tgt.mobile2 = src.dqm_phone, tgt.info3 = src.info3 where tgt.mobile2 is null;
 
-/*    merge into camp_offer_call_list_final tgt
-    using 
-    (
-        with bs as
-        (
-            select clf.cuid, dqm.phone_number dqm_phone, 'DQM' info3 from camp_offer_call_list_final clf
-						left join TBL_PILOT_DQM_ALT dqm on clf.cuid = dqm.id_cuid
-						where dqm.id_cuid is not null
-						and clf.mobile2 is null
-        )
-        select cuid, dqm_phone, info3 from bs
-    )src on (src.cuid = tgt.cuid)
-    when matched then update set tgt.mobile2 = src.dqm_phone, tgt.info3 = src.info3 
-			where tgt.mobile2 is null;
-*/    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
     commit;
     pstats('camp_offer_call_list_final');
 <<finish_line>>
-
-/*		ptruncate('camp_offer_call_list_final_dqm');
-
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Copy call list to DQM Test');
-		insert \*+ APPEND *\ into camp_offer_call_list_final_dqm
-		select * from camp_offer_call_list_final;
-		AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-    pstats('camp_offer_call_list_final_dqm');*/
-		
-/*		AP_PUBLIC.CORE_LOG_PKG.pStart('Remove Original Phone Numbers');
-		update camp_offer_call_list_final_dqm set mobile1 = null, mobile2 = null, mobile3 = null, mobile4 = null;
-		AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-    pstats('camp_offer_call_list_final_dqm');
-				
-		AP_PUBLIC.CORE_LOG_PKG.pStart('Apply DQM numbers to DQM Test');
-		merge into camp_offer_call_list_final_dqm tgt
-		using
-		(
-				with pass as
-				(
-						select id_cuid, skp_client, valid_phone, date_used, source, sub_source, rank_1,
-									 row_number() over (partition by valid_phone order by rank_1 asc, date_used desc) nums
-							from tbl_dqm_propose_alt
-						where source not in ('INDOMARET','TELCO    ') 
-				),
-				phone as
-				(
-						select id_cuid, skp_client, valid_phone, date_used, source, sub_source, row_number() over (partition by skp_client order by rank_1) nums
-						from pass where nums = 1 order by skp_Client, rank_1
-				),
-				contact as
-				(
-						select \*+ MATERIALIZE *\ * from 
-						(select id_cuid, valid_phone, nums from phone)
-						pivot
-						(
-								max(valid_phone)
-								for (nums) in (1  MOBILE1, 2 MOBILE2, 3 MOBILE3, 4 MOBILE4, 5 MOBILE5)
-						)
-				)
-				select cnt.id_cuid, cnt.MOBILE1 DQM_MOBILE1, CNT.MOBILE2 DQM_MOBILE2, CNT.MOBILE3 DQM_MOBILE3,
-							 cnt.MOBILE4 DQM_MOBILE4, cnt.MOBILE5 DQM_MOBILE5 
-				from contact cnt 
-		)src on (tgt.cuid = src.id_cuid)
-		when matched then update set
-				 tgt.mobile1 = src.dqm_mobile1,
-				 tgt.mobile2 = src.dqm_mobile2,
-				 tgt.mobile3 = src.dqm_mobile3,
-				 tgt.mobile4 = src.dqm_mobile4;
-		AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-    pstats('camp_offer_call_list_final_dqm');*/
 		
 AP_PUBLIC.CORE_LOG_PKG.pFinish;
 END;
-/
-
