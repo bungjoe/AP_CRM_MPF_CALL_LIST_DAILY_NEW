@@ -153,10 +153,10 @@ BEGIN
     )
     ,price_test as
     (
-        select /* MATERIALIZE */ ax.skp_client, ax.id_cuid, ax.interest_rate new_rate, ax.prev_interest std_rate, ax.ca_limit_final_updated credit_limit, ax.standard_instalment, ax.current_instalment, ax.standard_instalment - ax.current_instalment annuity_discount 
+        select /* MATERIALIZE */ ax.designator, ax.skp_client, ax.id_cuid, ax.interest_rate new_rate, ax.prev_interest std_rate, ax.ca_limit_final_updated credit_limit, ax.standard_instalment, ax.current_instalment, ax.standard_instalment - ax.current_instalment annuity_discount 
         from
         (
-            select elig.*, cpt.prev_interest, cpt.prev_tenor, 
+            select elig.*, cpt.prev_interest, cpt.prev_tenor, cpt.designator, 
                    ceil((((elig.interest_rate/100) * elig.ca_limit_final_updated * cpt.prev_tenor) + elig.ca_limit_final_updated)/cpt.prev_tenor) + 5000 current_instalment,
                    ceil((((cpt.prev_interest/100) * elig.ca_limit_final_updated * cpt.prev_tenor) + elig.ca_limit_final_updated)/cpt.prev_tenor) + 5000 standard_instalment
             from camp_price_test_pilot elig
@@ -169,14 +169,18 @@ BEGIN
            TList.Contract as CONTRACT_ID, 
            initcap(TList.Name_First) || ' ' || initcap(tlist.name_last) as FIRST_NAME, 
            --TList.Name_Last as LAST_NAME, 
-           case when lower(tlist.pilot_name) = 'a+'  and tlist.rbp_segment not like '%_249_%' then
-                'A+ Limit Up to 30jt'     
-/*                case when tlist.rbp_segment like '%_169_AA%' then 'A+ -37% discount (1.69% vs 2.69%)'
-                     when tlist.rbp_segment like '%_199_AA%' then 'A+ -26% discount (1.99% vs 2.69%)'
-                end*/
-                when pt.skp_client is not null then
-                     'Price Test - Discount Rp. ' || trim(to_char(pt.annuity_discount, '9,999,999')) || ' New Rate ' || new_rate || '%;' || ' Standard Rate ' || std_rate || '%;'
-                when lower(trim(tlist.pilot_name)) = 'premium offer' then 'Premium Offer'
+           case when trunc(sysdate) < to_Date('11/01/2018','mm/dd/yyyy') then
+                  case when lower(tlist.pilot_name) = 'a+'  and tlist.rbp_segment not like '%_249_%' then
+                        'A+ Limit Up to 30jt'     
+                        when pt.skp_client is not null then
+                             'Price Test - Discount Rp. ' || trim(to_char(pt.annuity_discount, '9,999,999')) || ' New Rate ' || new_rate || '%;' || ' Standard Rate ' || std_rate || '%;'
+                        when lower(trim(tlist.pilot_name)) = 'premium offer' then 'Premium Offer'
+                  end
+                else
+                  case when pt.skp_client is not null then
+                            pt.designator || ' - Discount Rp. ' || trim(to_char(pt.annuity_discount, '9,999,999')) || ' New Rate ' || new_rate || '%;' || ' Standard Rate ' || std_rate || '%;'
+                       when lower(trim(tlist.pilot_name)) = 'premium offer' then 'Premium Offer'
+                  end
            end LAST_NAME, 
            TList.MAX_CREDIT_AMOUNT as MAX_CREDIT_AMOUNT, 
            TList.MAX_INSTALMENT as MAX_INSTALLMENT, 
@@ -323,5 +327,3 @@ BEGIN
 
     AP_PUBLIC.CORE_LOG_PKG.pFinish ;
 END;
-/
-
