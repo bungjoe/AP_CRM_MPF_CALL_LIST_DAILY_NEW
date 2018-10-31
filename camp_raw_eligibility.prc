@@ -53,7 +53,7 @@ end if;
 		where (skp_client, date_valid_from) in
 		(
 				select skp_client, max(date_valid_from)date_valid_from from owner_dwh.f_campaign_client_at 
-				where trunc(sysdate) between date_valid_from and date_valid_to
+				where trunc(sysdate) between date_valid_from and date_valid_to and flag_active = 'Y'
 				group by skp_client
 		);
 		AP_PUBLIC.CORE_LOG_PKG.pEnd;
