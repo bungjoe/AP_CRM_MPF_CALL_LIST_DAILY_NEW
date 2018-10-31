@@ -19,18 +19,20 @@ BEGIN
     AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:gtt_cmp_raw_cont_fca');
 		insert /*+ APPEND */ into gtt_cmp_raw_cont_fca
 		select /*+ USE_HASH (FCA DCE)*/
-				 fca.skp_credit_case             ,fca.SKP_EMPLOYEE_CONSULTANT
-				,fca.name_producer                 ,fca.name_goods_type
-				,fca.name_goods_category           ,fca.amt_goods_price
-				,fca.AMT_DOWN_PAYMENT              ,fca.amt_credit_total
-				,fca.amt_annuity                   ,fca.CNT_INSTALMENT 
-				,fca.amt_fee_origination           ,fca.RATE_EFFECTIVE_INTEREST
-				,fca.NAME_INSTALMENT_SCHED_METHOD  ,fca.dtime_signature_contract
-				,fca.dtime_activation              ,fca.DTIME_CLOSE
-				,fca.amt_outstanding_principal     ,fca.dtime_payment_last
-				,dce.code_employee                 ,dce.name_common
-		from owner_Dwh.f_Contract_ad fca
-		join owner_Dwh.dc_employee dce on fca.skp_employee_consultant = dce.skp_employee
+			 fca.skp_credit_case              ,fca.SKP_EMPLOYEE_CONSULTANT
+			,fex.name_producer                ,fex.name_goods_type
+			,fex.name_goods_category          ,fex.amt_goods_price
+			,fex.AMT_DOWN_PAYMENT             ,fca.amt_credit_total
+			,fex.amt_annuity                  ,bal.cnt_instalment
+			,fex.amt_fee_origination          ,fca.RATE_EFFECTIVE_INTEREST
+			,fex.NAME_INSTALMENT_SCHED_METHOD ,fca.dtime_signature_contract
+			,fca.dtime_activation             ,fca.DTIME_CLOSE
+			,bal.amt_outstanding_principal    ,bal.dtime_payment_last
+			,dce.code_employee                ,dce.name_common
+		    from owner_Dwh.f_contract_base_ad fca
+				join owner_dwh.f_contract_extension_ad fex on fca.skp_credit_case = fex.skp_credit_case
+				join owner_Dwh.f_Contract_Aggr_Balance_Ad bal on fca.skp_credit_case = bal.skp_credit_case
+		    join owner_Dwh.dc_employee dce on fca.skp_employee_consultant = dce.skp_employee
 		where fca.skp_client in (select nvl(skp_client,-9999) from camp_elig_base where eligible_final_flag = 1 and priority_actual > 0);
     AP_PUBLIC.CORE_LOG_PKG.pEnd ;
     commit;
