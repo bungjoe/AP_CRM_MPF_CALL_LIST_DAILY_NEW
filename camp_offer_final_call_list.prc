@@ -23,10 +23,10 @@ BEGIN
     
     /********************************************* update filter on 7 May 2017 - Joeh ******************************************************/
     with w$1 as
-		(
-		     select /*+ MATERIALIZE */ trim(nvl(cuid,'-1')) from camp_ocs_mpf_offer where (/* call_result = 33 or */ record_type in (5,6)) and extracted_date >= trunc(sysdate-1)
-		),
-		bcl as
+    (
+         select /*+ MATERIALIZE */ trim(nvl(cuid,'-1')) from camp_ocs_mpf_offer where (/* call_result = 33 or */ record_type in (5,6)) and extracted_date >= trunc(sysdate-1)
+    ),
+    bcl as
     (
         select distinct tcl.cuid,  contract_id,  
         tcl.first_name, 
@@ -58,12 +58,12 @@ BEGIN
                   else '3. ' || tcl.tzone end 
              end tzone
              ,ccl.priority, nvl(ccl.attempt_last30d,0)attempt_last30D, ccl.risk_group, tcl.pilot_score,
-				case when vcl.NAME_CREDIT_STATUS = 'Finished' then add_months(trunc(sysdate), 1)-3
+        case when vcl.NAME_CREDIT_STATUS = 'Finished' then add_months(trunc(sysdate), 1)-3
              when vcl.name_credit_status = 'Active' then 
              case when add_months(trunc(sysdate,'MM') + (extract(day from vcl.due_Date)-1),1) - trunc(sysdate) < 30 then
                             add_months(trunc(sysdate,'MM') + (extract(day from vcl.due_Date)-1),2)-3
                     else add_months(trunc(sysdate,'MM') + (extract(day from vcl.due_Date)-1),1)-3 
-						 end
+             end
              else add_months(trunc(sysdate), 1) -3
         end first_due_Date, ccl.min_instalment, tcl.mobile3, tcl.mobile4, tcl.info3, tcl.info4, tcl.info5, tcl.info6, tcl.info7, tcl.info8, tcl.info9, tcl.info10
         from AP_CRM.CAMP_TDY_CALL_LIST tcl
@@ -72,7 +72,7 @@ BEGIN
         left join ap_Crm.camp_tzone_dist_map tzo on lower(tcl.name_district) = lower(tzo.name_district)
         LEFT JOIN AP_CRM.CAMP_SMS_FF_BASE SMS ON SMS.CAMPAIGN_ID = TO_CHAR(SYSDATE, 'YYMM') AND SMS.CALL_TO_ACTION = 'LANDING' AND TCL.CUID = SMS.ID_CUID
         where lower(info2) not like 'do not call%' 
-					and tcl.cuid not in (select cuid from w$1)
+          and tcl.cuid not in (select cuid from w$1)
     ),
     tcl as
     (
@@ -97,7 +97,7 @@ BEGIN
          else info1
     end  info1, 
     info2, 
-    tzone, row_order nums, 'OFFER_REGULAR' campaign_type, first_due_Date, min_instalment, mobile3, mobile4, info3, info4, info5, info6, info7, info8, info9, info10, trunc(sysdate)
+    tzone, row_order nums, 'OFFER_REGULAR' campaign_type, first_due_Date, min_instalment, mobile3, mobile4, info3, info4, info5, info6, info7, info8, info9, info10, null
     from
     (   /* (order by timezone, channel, max_credit_amount, priority, attempt) */
         select az.*, row_number() over (order by az.nums) row_order from
@@ -140,17 +140,17 @@ BEGIN
     and ax.row_order <= 250000
     union all
     select distinct cci.id_cuid, cmc.contract
-		       ,case when lower(cci.gender) = 'male' then 'Bpk. ' || cci.name_first || ' ' || cci.name_last
-					       when lower(cci.gender) = 'female' then 'Ibu. ' || cci.name_first || ' ' || cci.name_last
-						end name_first, null	
-		       ,ceb.ca_limit_final_updated, ceb.annuity_limit_final_updated
+           ,case when lower(cci.gender) = 'male' then 'Bpk. ' || cci.name_first || ' ' || cci.name_last
+                 when lower(cci.gender) = 'female' then 'Ibu. ' || cci.name_first || ' ' || cci.name_last
+            end name_first, null  
+           ,ceb.ca_limit_final_updated, ceb.annuity_limit_final_updated
            ,cci.name_mother, cci.name_birth_place, cci.date_birth, cci.id_ktp
            ,cci.expiry_date_ktp, phone.Phone1, phone.Phone2, mail.email, cci.full_address, cci.name_town, cci.name_subdistrict, cci.code_zip_code
            ,cci.name_district
            , case when md.loan_purpose_desc is not null then 'My Dream : ' || nvl(md.loan_purpose_desc,'') else '' end info1
            , '6.Follow Up - In 1stBOD for ' || to_char(trunc(sysdate) - trunc(dtime_pre_process)) || ' days' info2
            , nvl(tzo.tzone,'WIB')
-           , row_number() over (order by (trunc(sysdate) - trunc(dtime_pre_process)) desc) nums, 'OFFER_REGULAR' campaign_type, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, trunc(sysdate) 
+           , row_number() over (order by (trunc(sysdate) - trunc(dtime_pre_process)) desc) nums, 'OFFER_REGULAR' campaign_type, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, null 
     from camp_mpf_contracts cmc
     left join camp_client_identity cci on cmc.skp_client = cci.skp_client
     left join camp_elig_base ceb on cci.id_cuid = ceb.id_cuid
@@ -212,15 +212,15 @@ BEGIN
         where nums = 1 
     )src on (src.id_cuid = tgt.cuid)
     when matched then update set tgt.mobile2 = src.text_contact, tgt.info1 = case when tgt.info1 = '' then 'Alternate Mobile2' else tgt.info1 || ', Alternate Mobile2' end 
-			where tgt.mobile2 is null;
+      where tgt.mobile2 is null;
     AP_PUBLIC.CORE_LOG_PKG.pEnd ;
     commit;
     pstats('camp_offer_call_list_final');
     
-		if trunc(sysdate) > to_date('09/30/2018','mm/dd/yyyy') then 
+    if trunc(sysdate) > to_date('09/30/2018','mm/dd/yyyy') then 
        goto finish_line;
     end if;
-		
+    
     AP_PUBLIC.CORE_LOG_PKG.pStart('Apply DQM number');
     merge into camp_offer_call_list_final tgt
     using 
@@ -233,6 +233,6 @@ BEGIN
     commit;
     pstats('camp_offer_call_list_final');
 <<finish_line>>
-		
+    
 AP_PUBLIC.CORE_LOG_PKG.pFinish;
 END;
