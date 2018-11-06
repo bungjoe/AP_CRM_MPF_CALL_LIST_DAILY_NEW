@@ -251,7 +251,8 @@ begin
       )src on (tgt.cuid = src.cuid and tgt.nums = src.nums)
       when matched then update
            set tgt.name_district = tgt.name_district || ', ' || src.markings,
-					     tgt.info4 = src.markings;
+		tgt.info4 = src.markings,
+		tgt.date_generated = trunc(sysdate);
       AP_PUBLIC.CORE_LOG_PKG.pEnd;
       commit;
 <<finish_line>>      
