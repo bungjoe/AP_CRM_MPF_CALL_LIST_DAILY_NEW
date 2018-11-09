@@ -41,18 +41,25 @@ begin
       AP_PUBLIC.CORE_LOG_PKG.pInit( 'AP_CRM', 'CAMP_RANDOM_SPLIT_OFFER_CL');
       ptruncate('gtt_camp_ptb_score');
       AP_PUBLIC.CORE_LOG_PKG.pStart('Insert gtt_camp_ptb_score');
-      insert /*+ APPEND */ into gtt_camp_ptb_score
-/*      select eli.skp_client, ptb.ID_CUID, ptb.PRIORITY, 
-             case when ptb.DECILE > 10 then '10+' else trim(to_char(decile,'09')) end decile, 
-             ptb.PRED score, ptb.MAX_CREDIT_AMOUNT from V_PTB_SCORE_2 ptb
-      left join camp_elig_base eli on ptb.ID_CUID = eli.id_cuid
-      where campaign_id = to_char(sysdate,'yymm');*/
-			select eli.skp_client, ptb.ID_CUID, eli.priority_actual priority, 
-       case when ptb.DECILE > 10 then '10+' else trim(to_char(decile,'09')) end decile, 
-       ptb.score score, eli.ca_limit_final_updated max_credit_amount
-			 from ptb_population ptb
-      left join camp_elig_base eli on ptb.ID_CUID = eli.id_cuid
-      where campaign_id = to_char(sysdate,'yymm');
+			insert /*+ APPEND */ into gtt_camp_ptb_score
+			with ptb as
+			(
+					select distinct * from ptb_population where (skp_client, id_cuid, campaign_id) in
+					(
+							select skp_Client, id_cuid, max(campaign_id)campaign_id from ptb_population where campaign_id between  to_char(sysdate,'yymm')-1 and to_char(sysdate,'yymm')
+							group by skp_Client, id_cuid
+					)
+			)
+			/*      select eli.skp_client, ptb.ID_CUID, ptb.PRIORITY, 
+						 case when ptb.DECILE > 10 then '10+' else trim(to_char(decile,'09')) end decile, 
+						 ptb.PRED score, ptb.MAX_CREDIT_AMOUNT from V_PTB_SCORE_2 ptb
+			left join camp_elig_base eli on ptb.ID_CUID = eli.id_cuid
+			where campaign_id = to_char(sysdate,'yymm');*/
+			select distinct eli.skp_client, ptb.ID_CUID, eli.priority_actual priority, 
+			 case when ptb.DECILE > 10 then '10+' else trim(to_char(decile,'09')) end decile, 
+			 ptb.score score, eli.ca_limit_final_updated max_credit_amount
+			 from ptb
+			left join camp_elig_base eli on ptb.ID_CUID = eli.id_cuid;
       AP_PUBLIC.CORE_LOG_PKG.pEnd;
       commit;
       pStats('gtt_camp_ptb_score');
@@ -62,7 +69,7 @@ begin
       insert /*+ APPEND */ into gtt_camp_ff_decile_num
       with base as
       (
-          SELECT cuid, decile, nums orig_nums, trunc(dbms_random.random)rand_nums from camp_offer_call_list_final tdy
+          SELECT distinct cuid, decile, nums orig_nums, trunc(dbms_random.random)rand_nums from camp_offer_call_list_final tdy
                    left join gtt_camp_ptb_score ptb on tdy.cuid = ptb.id_cuid
                    where info2 not like '6.Follow Up - In 1stBOD%'
       ),
@@ -251,13 +258,11 @@ begin
       )src on (tgt.cuid = src.cuid and tgt.nums = src.nums)
       when matched then update
            set tgt.name_district = tgt.name_district || ', ' || src.markings,
-		tgt.info4 = src.markings,
-		tgt.date_generated = trunc(sysdate);
+					     tgt.info4 = src.markings,
+							 tgt.date_generated = trunc(sysdate);
       AP_PUBLIC.CORE_LOG_PKG.pEnd;
       commit;
 <<finish_line>>      
       pstats('CAMP_OFFER_CALL_LIST_FINAL'); 
 AP_PUBLIC.CORE_LOG_PKG.pFinish ;      
 end;
-/
-
