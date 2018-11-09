@@ -313,6 +313,24 @@ begin
     commit;
     pStats('GTT_CAMP_LANDING_PAGE');
 
+    AP_PUBLIC.CORE_LOG_PKG.pStart('DEL - GTT_CAMP_LANDING_PAGE');
+		delete from GTT_CAMP_landing_page
+		where (skp_client, rowid) in
+		(   
+				select skp_client, roideh from
+				(
+						select t.skp_client, date_created, t.rowid roideh, row_number() over (partition by skp_client, date_created order by date_created desc)nums from GTT_CAMP_landing_page t
+						where (skp_client, date_created) in
+						(
+								select skp_client, date_created from GTT_CAMP_landing_page
+								group by skp_client, date_created having count(skp_client) > 1
+						)
+				)where nums > 1
+		);
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+    commit;
+    pStats('GTT_CAMP_LANDING_PAGE');
+
     ptruncate('GTT_CAMP_abandon');
     AP_PUBLIC.CORE_LOG_PKG.pStart('INS - GTT_CAMP_ABANDON');
     insert /*+ APPEND */ into GTT_CAMP_abandon
@@ -528,5 +546,3 @@ begin
 
     AP_PUBLIC.CORE_LOG_PKG.pFinish ;
 end;
-/
-
