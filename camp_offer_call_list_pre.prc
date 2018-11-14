@@ -150,24 +150,29 @@ BEGIN
         )
         and name_credit_status <> 'Finished'     
     ),
-    ptb_attempt as(
-        SELECT PP.CAMPAIGN_ID, PP.ID_CUID, PP.DECILE, ATT.ATTEMPT
-        FROM PTB_POPULATION PP
-        LEFT JOIN 
-            (
-              SELECT TO_CHAR(SYSDATE, 'YYMM') CAMPAIGN_ID, CUID, COUNT(ATTEMPT) ATTEMPT
-              FROM (
-                    SELECT TRUNC(CAF.DATE_CALL) DATE_CALL ,CUID, COUNT(CONTACT_INFO) ATTEMPT
-                    FROM AP_CRM.CONTACT_ATTEMPT_FACT_CRM CAF
-                    WHERE 1=1
-                          AND CAF.DATE_CALL >= TRUNC(SYSDATE, 'MM')
-                          AND CAMPAIGN_NAME IN ('MPF_OFFER','FLEXY_FAST')
-                    GROUP BY TRUNC(CAF.DATE_CALL), CAF.CUID
-                    )
-              GROUP BY TO_CHAR(SYSDATE, 'YYMM'), CUID
-              ) ATT
-        ON PP.ID_CUID = ATT.CUID 
-        WHERE PP.CAMPAIGN_ID = TO_CHAR(SYSDATE, 'YYMM')
+    ptb as
+    (
+         select /*+ MATERIALIZE */ * from ptb_population where campaign_id = TO_CHAR(SYSDATE, 'YYMM')
+    ),
+    caf as
+    (
+        SELECT /*+ MATERIALIZE */ TRUNC(CAF.DATE_CALL) DATE_CALL ,CUID, COUNT(CONTACT_INFO) ATTEMPT
+        FROM AP_CRM.CONTACT_ATTEMPT_FACT_CRM CAF
+        WHERE 1=1
+            AND CAF.DATE_CALL >= TRUNC(SYSDATE, 'MM')
+            AND CAMPAIGN_NAME IN ('MPF_OFFER','FLEXY_FAST')
+        GROUP BY TRUNC(CAF.DATE_CALL), CAF.CUID
+    ),
+    att as
+    (
+        SELECT /*+ MATERIALIZE */ TO_CHAR(SYSDATE, 'YYMM') CAMPAIGN_ID, CUID, COUNT(ATTEMPT) ATTEMPT from caf
+        GROUP BY TO_CHAR(SYSDATE, 'YYMM'), CUID
+    ),
+    ptb_attempt as
+    (
+        SELECT /*+ MATERIALIZE USE_HASH(ATT PP) */ PP.CAMPAIGN_ID, PP.ID_CUID, PP.DECILE, ATT.ATTEMPT
+        from ptb pp
+        left join att ON PP.ID_CUID = ATT.CUID
     ),
     ptb_pilot as
     (
@@ -307,16 +312,16 @@ BEGIN
            cpl.pilot_flag,
            null,
            nvl(ptb.score, 0),
-					 NULL MOBILE3,
-					 NULL MOBILE4,
-					 null info3, /* Do not use this column, used for DQM marker */
-					 NULL INFO4,
-					 NULL INFO5,
-					 NULL INFO6,
-					 NULL INFO7,
-					 NULL INFO8,
-					 NULL INFO9,
-					 NULL INFO10					 
+	   NULL MOBILE3,
+	   NULL MOBILE4,
+	   null info3, /* Do not use this column, used for DQM marker */
+	   NULL INFO4,
+	   NULL INFO5,
+	   NULL INFO6,
+	   NULL INFO7,
+	   NULL INFO8,
+	   NULL INFO9,
+	   NULL INFO10					 
     from AP_CRM.CAMP_COMPILED_LIST Tlist
     left join price_test pt on tlist.skp_client = pt.skp_client
     left join Mobile_offer on Tlist.ID_CUID = Mobile_offer.ID_CUID
