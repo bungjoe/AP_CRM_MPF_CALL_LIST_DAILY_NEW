@@ -16,6 +16,32 @@ CREATE OR REPLACE PROCEDURE "CAMP_OFFER_CALL_LIST_PRE" AS
 
 BEGIN
     AP_PUBLIC.CORE_LOG_PKG.pInit( 'AP_CRM', 'CAMP_OFFER_CALL_LIST_PRE') ;
+		
+    AP_PUBLIC.CORE_LOG_PKG.pStart('ins:camp_mob_activity_log');
+    insert /*+ APPEND */ into camp_mob_activity_log
+    with exs as
+    (
+        select /*+ MATERIALIZE */ created_date, modules, user_id from camp_mob_activity_log
+        where created_date >= trunc(sysdate-2) 
+    )
+    select /*+ USE_HASH(LOGS EXS) FULL(EXS) FULL(LOGS) */ logs.created_date, logs.app_version, logs.description, logs.method_name, logs.modules, logs.user_id 
+    from APP_BICC.STGV_MOB_ACTIVITY_LOG logs
+    left join exs on logs."CREATED_DATE" = exs.created_date and logs."MODULES" = exs.modules and logs."USER_ID" = exs.user_id
+    where logs.created_date >= trunc(sysdate-2) and logs.user_id is not null
+      and exs.modules is null; 
+    commit;
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+    commit;
+    pStats('camp_mob_activity_log');
+    
+    pTruncate('gtt_camp_final_phone');
+    AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:gtt_camp_final_phone');
+    insert /*+ APPEND  */ into gtt_camp_final_phone
+    select /*+ */ * from AP_CRM.V_CAMP_FINAL_PHONENUM;
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+    commit;
+    pStats('gtt_camp_final_phone');
+		
     pTruncate('CAMP_TDY_CALL_LIST');
     --execute immediate 'truncate table ap_crm.CAMP_TDY_CALL_LIST';
     AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:CAMP_TDY_CALL_LIST');
@@ -92,22 +118,24 @@ BEGIN
         where trunc(DT_call_back) is not null 
         and trunc(DT_call_back) >= trunc(sysdate)
     ),
-		sma as
-		(    
-				select /*+ MATERIALIZE */ sma.USER_ID, sma."CREATED_DATE" 
-				from app_bicc.stgv_mob_activity_log sma
-				where modules in ('CALCULATOR_FOR_FLEXIFAST_OFFER','PRODUCT_CALCULATOR_FLEXIFAST') and trunc(sma.created_date) >= trunc(sysdate-60)
-		),
-		btx as
-		(	
-				select /*+ MATERIALIZE FULL(SMA) FULL(SMU) USE_HASH(sma smu) */ sma.USER_ID, smu.CUID, smu.PHONE, sma."CREATED_DATE", row_number() over (partition by cuid order by sma.created_date desc)nums
-				from sma
-				join 	ap_bicc.stgv_mob_user smu on sma.USER_ID = smu.USER_ID
-		),		
+    sma as
+    (    
+        select /*+ MATERIALIZE */ sma.USER_ID, sma."CREATED_DATE", row_number() over (partition by sma.user_id order by created_date desc)nums
+        from CAMP_MOB_ACTIVITY_LOG sma
+        where sma.created_date >= trunc(sysdate-60) and modules in ('CALCULATOR_FOR_FLEXIFAST_OFFER','PRODUCT_CALCULATOR_FLEXIFAST')
+    ),
+    btx as
+    ( 
+        select /*+ MATERIALIZE USE_HASH(SMU SMA) */ sma.USER_ID, smu.CUID, smu.PHONE, sma."CREATED_DATE", 
+        sma.nums
+        from sma
+        join  ap_bicc.stgv_mob_user smu on sma.USER_ID = smu.USER_ID
+        where sma.nums = 1
+    ),    
     calculator as
     (
-        select user_id, cuid, phone from btx where nums = 1
-				and phone not in (select text_contact from camp_comm_rec_wn)
+        select /*+ MATERIALIZE */ user_id, cuid, phone from btx where 1=1
+        and phone not in (select text_contact from camp_comm_rec_wn)
     ),
     pos_loan as
     (
@@ -165,7 +193,7 @@ BEGIN
               and elig.campaign_id = to_char(sysdate,'yymm')
         )ax       
     )
-    select /*+ */ distinct TList.ID_CUID as CUID, 
+    select /*+  */ distinct TList.ID_CUID as CUID, 
            TList.Contract as CONTRACT_ID, 
            initcap(TList.Name_First) || ' ' || initcap(tlist.name_last) as FIRST_NAME, 
            --TList.Name_Last as LAST_NAME, 
@@ -299,7 +327,7 @@ BEGIN
     left join call_back on Tlist.ID_CUID = call_back.ID_CUID
     left join inbound_comm on Tlist.ID_CUID = inbound_comm.ID_CUID
     left join (select TEXT_CONTRACT_NUMBER ,CODE_TIMEZONE from AP_BICC.F_CONTRACT_TIMEZONE_AD) Tm_zone on Tm_zone.TEXT_CONTRACT_NUMBER=Tlist.CONTRACT
-    left join AP_CRM.V_CAMP_FINAL_PHONENUM phone on Tlist.ID_CUID = phone.ID_CUID
+    left join AP_CRM.gtt_camp_final_phone phone on Tlist.ID_CUID = phone.ID_CUID
     left join AP_CRM.V_CAMP_FINAL_EMAIL_ADDR mail on Tlist.ID_CUID = mail.ID_CUID
     left join AP_CRM.CAMP_PILOT_LIST cpl on tlist.id_cuid = cpl.id_cuid and cpl.campaign_id = to_char(sysdate,'yymm')
     left join ap_crm.v_camp_rpos_contracts vcr on tlist.skp_client = vcr.skp_client
