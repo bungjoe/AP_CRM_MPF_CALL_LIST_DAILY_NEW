@@ -97,7 +97,7 @@ BEGIN
          else info1
     end  info1, 
     info2, 
-    tzone, row_order nums, 'OFFER_REGULAR' campaign_type, first_due_Date, min_instalment, mobile3, mobile4, info3, info4, info5, info6, info7, info8, info9, info10, null
+    tzone, row_order nums, 'OFFER_REGULAR' campaign_type, first_due_Date, min_instalment, mobile3, mobile4, info3, info4, info5, info6, info7, info8, info9, info10, trunc(sysdate)
     from
     (   /* (order by timezone, channel, max_credit_amount, priority, attempt) */
         select az.*, row_number() over (order by az.nums) row_order from
@@ -137,7 +137,7 @@ BEGIN
     )ax 
     left join my_dream md on ax.cuid = md.cuid
     where 1=1 
-    and ax.row_order <= 250000
+    and ax.row_order <= 180000
     union all
     select distinct cci.id_cuid, cmc.contract
            ,case when lower(cci.gender) = 'male' then 'Bpk. ' || cci.name_first || ' ' || cci.name_last
@@ -150,7 +150,7 @@ BEGIN
            , case when md.loan_purpose_desc is not null then 'My Dream : ' || nvl(md.loan_purpose_desc,'') else '' end info1
            , '6.Follow Up - In 1stBOD for ' || to_char(trunc(sysdate) - trunc(dtime_pre_process)) || ' days' info2
            , nvl(tzo.tzone,'WIB')
-           , row_number() over (order by (trunc(sysdate) - trunc(dtime_pre_process)) desc) nums, 'OFFER_REGULAR' campaign_type, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, null 
+           , row_number() over (order by (trunc(sysdate) - trunc(dtime_pre_process)) desc) nums, 'OFFER_REGULAR' campaign_type, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, trunc(sysdate) 
     from camp_mpf_contracts cmc
     left join camp_client_identity cci on cmc.skp_client = cci.skp_client
     left join camp_elig_base ceb on cci.id_cuid = ceb.id_cuid
@@ -185,7 +185,7 @@ BEGIN
     (
         select id_cuid, skp_client, text_contact, row_number() over (partition by skp_client order by nvl(last_call_date, to_date('01/01/1980','mm/dd/yyyy'))) nums
          from camp_alt_number
-        where flag_status = 1
+        where flag_status = 1 and skp_client not in (select skp_Client from tbl_dqm_propose_alt)
     )
     select trunc(sysdate)log_Date, to_char(sysdate,'hh24:mi:ss')time_inserted, clf.cuid, clf.info1, clf.info2, bs.text_contact alt_number from camp_offer_call_list_final clf
     left join bs on clf.cuid = bs.id_cuid and bs.nums = 1
@@ -205,8 +205,8 @@ BEGIN
         with bs as
         (
             select id_cuid, skp_client, text_contact, row_number() over (partition by skp_client order by nvl(last_call_date, to_date('01/01/1980','mm/dd/yyyy'))) nums
-             from camp_alt_number
-            where flag_status = 1
+             from camp_alt_number 
+            where flag_status = 1 and skp_client not in (select skp_Client from tbl_dqm_propose_alt)
         )
         select id_cuid, skp_client, text_contact from bs
         where nums = 1 
