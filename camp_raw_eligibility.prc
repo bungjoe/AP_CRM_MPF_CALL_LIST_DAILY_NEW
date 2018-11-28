@@ -34,21 +34,23 @@ end if;
 		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:CAMP_CLIENT_AT');
 		insert /*+ APPEND */ into ap_Crm.camp_client_at
 		select /*+ */
-				SKF_CAMPAIGN_CLIENT ,CODE_SOURCE_SYSTEM
-				,ID_SOURCE          ,DATE_EFFECTIVE
-				,SKP_PROC_INSERTED  ,SKP_PROC_UPDATED
-				,FLAG_DELETED       ,SKP_CAMPAIGN
-				,SKP_CLIENT         ,SKP_CREDIT_CASE
-				,SKP_GOODS_TYPE     ,SKP_MARKETING_ACTION
-				,ID_CAMPAIGN        ,CODE_SEGMENT
-				,CODE_CAMPAIGN_TYPE ,CODE_CAMPAIGN_SUB_TYPE
-				,CODE_PRODUCT_TYPE  ,NAME_OFFER
-				,FLAG_OFFER         ,AMT_CREDIT_MAX
-				,AMT_ANNUITY_MAX    ,AMT_DOWN_PAYMENT_MIN
-				--,trunc(sysdate,'MM') DATE_VALID_FROM /* Change to start of the month to workaround validity that starting at the mid of the month */    
-				,DATE_VALID_FROM    ,DATE_VALID_TO
-				,FLAG_RESPONDED     ,SKP_CAMPAIGN_SUBTYPE
-				,SKP_CAMPAIGN_TYPE  ,CNT_CAMPAIGN_CLIENT
+        SKF_CAMPAIGN_CLIENT ,CODE_SOURCE_SYSTEM
+        ,ID_SOURCE          ,DATE_EFFECTIVE
+        ,SKP_PROC_INSERTED  ,SKP_PROC_UPDATED
+        ,FLAG_DELETED       ,SKP_CAMPAIGN
+        ,SKP_CLIENT         ,SKP_CREDIT_CASE
+        ,SKP_GOODS_TYPE     ,SKP_MARKETING_ACTION
+        ,ID_CAMPAIGN        ,CODE_SEGMENT
+        ,CODE_CAMPAIGN_TYPE ,CODE_CAMPAIGN_SUB_TYPE
+        ,CODE_PRODUCT_TYPE  ,NAME_OFFER
+        ,FLAG_OFFER         ,AMT_CREDIT_MAX
+        ,AMT_ANNUITY_MAX    ,AMT_DOWN_PAYMENT_MIN
+        --,trunc(sysdate,'MM') DATE_VALID_FROM /* Change to start of the month to workaround validity that starting at the mid of the month */    
+        ,DATE_VALID_FROM    ,DATE_VALID_TO
+        ,FLAG_RESPONDED     ,SKP_CAMPAIGN_SUBTYPE
+        ,SKP_CAMPAIGN_TYPE  ,CNT_CAMPAIGN_CLIENT
+				,DTIME_EXPIRATION_OFFER, FLAG_ACTIVE
+				,FLAG_RECALCULATED  ,ID_OFFER
 		from owner_dwh.f_campaign_client_at cca
 		where (skp_client, date_valid_from) in
 		(
@@ -198,7 +200,7 @@ end if;
 				select distinct risk_band, rbp_segment_temp rbp_segment, max_tenor tenor, interest_rate from camp_elig_base
 				where priority_actual > 0
 				minus
-				select risk_band, rbp_segment, tenor, interest_rate from ap_crm.f_rbp_segment_price
+				select risk_band, rbp_segment, tenor, interest_rate from ap_crm.f_rbp_segment_price where status = 'Y'
 		) src
 		on (tgt.risk_band = src.risk_band and tgt.rbp_segment = src.rbp_segment and tgt.tenor = src.tenor and tgt.interest_rate = src.interest_rate)
 		when matched then
@@ -213,5 +215,3 @@ end if;
 <<finish_line>>
 		AP_PUBLIC.CORE_LOG_PKG.pFinish ;
 END;
-/
-
