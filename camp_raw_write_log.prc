@@ -42,6 +42,8 @@ end if;
   ,DATE_VALID_FROM      ,DATE_VALID_TO
   ,FLAG_RESPONDED       ,SKP_CAMPAIGN_SUBTYPE
   ,SKP_CAMPAIGN_TYPE    ,CNT_CAMPAIGN_CLIENT
+	,DTIME_EXPIRATION_OFFER, FLAG_ACTIVE
+	,FLAG_RECALCULATED  ,ID_OFFER
   from ap_Crm.camp_client_at;
   AP_PUBLIC.CORE_LOG_PKG.pEnd;
   commit;
@@ -119,7 +121,6 @@ end if;
   commit;
   pStats('LOG_CAMP_COMPILED_LIST');
 
-
   AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:LOG_CAMP_TDY_CALL_LIST');
   insert /*+ APPEND */ into ap_CRM.log_Camp_Tdy_Call_List
   select trunc(sysdate)log_date, to_char(sysdate, 'hh24:mi:ss')time_inserted, tdy.* from ap_crm.CAMP_TDY_CALL_LIST tdy;
@@ -133,8 +134,15 @@ end if;
   AP_PUBLIC.CORE_LOG_PKG.pEnd;
   commit;
   pStats('LOG_CAMP_OFFER_CALL_LIST_FINAL');
+
+  AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:log_camp_ptb_population');
+	insert into log_camp_ptb_population
+	select trunc(sysdate)log_Date, to_char(sysdate,'hh24:mi:ss')time_inserted, ptb.* from ptb_population ptb
+	where campaign_id = to_char(sysdate,'yymm');
+	AP_PUBLIC.CORE_LOG_PKG.pEnd;
+	commit;
+	pStats('log_camp_ptb_population');
+	
  <<finish_line>> 
 AP_PUBLIC.CORE_LOG_PKG.pFinish ;
 end;
-/
-
