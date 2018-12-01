@@ -111,6 +111,23 @@ end if;
 		commit;
 		pStats('camp_orbp_offer');
 
+    pTruncate('camp_offer_recalculation');
+		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:camp_offer_recalculation');
+		insert /*+ APPEND */ into camp_offer_recalculation
+		select skf_offer_recalculation, skp_client, skf_offer_rec_main, skf_campaign_client, id_offer, flag_deactivated, id_campaign, 
+					 date_valid_from, date_valid_to, date_expiration_offer, amt_credit_max, amt_instalment_max, text_pricing_category, cnt_instalment, rate_interest,
+					 dtime_obod_generated, dtime_obod_submitted, num_group_position_1 
+		from owner_dwh.f_offer_recalculation_tt a 
+		where (skp_client, id_campaign) in
+					 (
+							 select skp_Client, id_campaign from camp_orbp_offer where flag_active = 'Y'
+					 )
+--			and a.FLAG_DEACTIVATED = 'N' /* Turn on this line after data pattern is confirmed after offer is recalculated */       
+		;
+		AP_PUBLIC.CORE_LOG_PKG.pEnd;
+		commit;
+		pStats('camp_offer_recalculation');
+		
     pTruncate('gtt_camp_elig_base2');
     AP_PUBLIC.CORE_LOG_PKG.pStart('INS:gtt_camp_elig_base2');
     INSERT /*+ APPEND */ into gtt_camp_elig_base2
