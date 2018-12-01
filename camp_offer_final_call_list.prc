@@ -24,12 +24,13 @@ BEGIN
     /********************************************* update filter on 7 May 2017 - Joeh ******************************************************/
     with w$1 as
     (
-         select /*+ MATERIALIZE */ trim(nvl(cuid,'-1')) from camp_ocs_mpf_offer where (/* call_result = 33 or */ record_type in (5,6)) and extracted_date >= trunc(sysdate-1)
+         select /*+ MATERIALIZE */ trim(nvl(cuid,'-1'))cuid from camp_ocs_mpf_offer where (/* call_result = 33 or */ record_type in (5,6)) and extracted_date >= trunc(sysdate-1)
     ),
     bcl as
     (
         select distinct tcl.cuid,  contract_id,  
         tcl.first_name, 
+        --tcl.last_name,
         CASE WHEN SMS.ID_CUID IS NOT NULL THEN (CASE WHEN tcl.LAST_NAME IS NOT NULL THEN 'Toll Free, ' || tcl.LAST_NAME ELSE 'Toll Free' END) ELSE tcl.LAST_NAME END LAST_NAME,
         tcl.MAX_CREDIT_AMOUNT,
         tcl.max_installment, 
@@ -70,7 +71,7 @@ BEGIN
         inner join ap_crm.camp_compiled_list ccl on ccl.id_cuid = tcl.cuid
         left join ap_Crm.v_Camp_last_contract vcl on tcl.contract_id = vcl.contract
         left join ap_Crm.camp_tzone_dist_map tzo on lower(tcl.name_district) = lower(tzo.name_district)
-        LEFT JOIN AP_CRM.CAMP_SMS_FF_BASE SMS ON SMS.CAMPAIGN_ID = TO_CHAR(SYSDATE, 'YYMM') AND SMS.CALL_TO_ACTION = 'LANDING' AND TCL.CUID = SMS.ID_CUID
+        LEFT JOIN AP_CRM.CAMP_SMS_FF_BASE SMS ON SMS.CAMPAIGN_ID = TO_CHAR(SYSDATE, 'YYMM') AND SMS.CALL_TO_ACTION = 'TOLL FREE' AND TCL.CUID = SMS.ID_CUID
         where lower(info2) not like 'do not call%' 
           and tcl.cuid not in (select cuid from w$1)
     ),
@@ -97,7 +98,7 @@ BEGIN
          else info1
     end  info1, 
     info2, 
-    tzone, row_order nums, 'OFFER_REGULAR' campaign_type, first_due_Date, min_instalment, mobile3, mobile4, info3, info4, info5, info6, info7, info8, info9, info10, trunc(sysdate)
+    tzone, row_order nums, 'OFFER_REGULAR' campaign_type, first_due_Date, min_instalment, mobile3, mobile4, info3, info4, info5, info6, info7, info8, info9, info10, null
     from
     (   /* (order by timezone, channel, max_credit_amount, priority, attempt) */
         select az.*, row_number() over (order by az.nums) row_order from
@@ -216,22 +217,125 @@ BEGIN
     AP_PUBLIC.CORE_LOG_PKG.pEnd ;
     commit;
     pstats('camp_offer_call_list_final');
-    
-    if trunc(sysdate) > to_date('09/30/2018','mm/dd/yyyy') then 
-       goto finish_line;
-    end if;
-    
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Apply DQM number');
-    merge into camp_offer_call_list_final tgt
-    using 
-    (
-          select dqm.id_cuid, dqm.phone_number dqm_phone, 'DQM' info3 from TBL_PILOT_DQM_ALT dqm
-    )src on (src.id_cuid = tgt.cuid)
-    when matched then update set tgt.mobile2 = src.dqm_phone, tgt.info3 = src.info3 where tgt.mobile2 is null;
 
+    pTruncate('CAMP_ORBP_CALL_LIST_FINAL');
+    AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:CAMP_ORBP_CALL_LIST_FINAL');
+    insert /*+ APPEND */ into AP_CRM.CAMP_ORBP_CALL_LIST_FINAL 
+    with bcl as
+    (
+        select distinct tcl.cuid,  contract_id,  
+        tcl.first_name, 
+        tcl.last_name,
+				--CASE WHEN SMS.ID_CUID IS NOT NULL THEN (CASE WHEN tcl.LAST_NAME IS NOT NULL THEN 'Toll Free, ' || tcl.LAST_NAME ELSE 'Toll Free' END) ELSE tcl.LAST_NAME END LAST_NAME,
+        tcl.MAX_CREDIT_AMOUNT,
+        tcl.max_installment, 
+        tcl.MOTHER_MAIDEN_NAME, tcl.PLACE_OF_BIRTH, tcl.BIRTH_DATE,
+        tcl.ID_KTP, tcl.EXPIRY_DATE_KTP,
+        tcl.MOBILE1, tcl.mobile2,
+        tcl.EMAIL_ADDRESS, tcl.FULL_ADDRESS, tcl.NAME_TOWN || ', P' || trim(to_char(ccl.priority,'00')) NAME_TOWN, tcl.NAME_SUBDISTRICT, tcl.CODE_ZIP, tcl.NAME_DISTRICT,
+        tcl.info1 
+        || ', ' ||
+        case when vcl.NAME_CREDIT_STATUS = 'Finished' then to_char(add_months(sysdate, 1)-3,'dd Month yyyy') 
+             when vcl.name_credit_status = 'Active' then 
+             case when add_months(trunc(sysdate,'MM') + (extract(day from vcl.due_Date)-1),1) - trunc(sysdate) < 30 then
+                            to_char(add_months(trunc(sysdate,'MM') + (extract(day from vcl.due_Date)-1),2)-3,'dd Month yyyy')
+                    else to_char(add_months(trunc(sysdate,'MM') + (extract(day from vcl.due_Date)-1),1)-3,'dd Month yyyy') end
+            else to_char(add_months(sysdate, 1)-3,'dd Month yyyy')
+        end info1
+        , tcl.info2, 
+        case when tcl.tzone = 'DFT' and tzo.tzone is not null then 
+                  case when tzo.tzone = 'WIT' then '1. WIT'
+                       when tzo.tzone = 'WITA' then '2. WITA'
+                  else '3. ' || tzo.tzone end
+             when tcl.tzone = 'DFT' and tzo.tzone is null then '3. WIB'
+             else 
+                  case when tcl.tzone = 'WIT' then '1. WIT'
+                       when tcl.tzone = 'WITA' then '2. WITA'
+                  else '3. ' || tcl.tzone end 
+             end tzone
+             ,ccl.priority, nvl(ccl.attempt_last30d,0)attempt_last30D, ccl.risk_group, tcl.pilot_score,
+        case when vcl.NAME_CREDIT_STATUS = 'Finished' then add_months(trunc(sysdate), 1)-3
+             when vcl.name_credit_status = 'Active' then 
+             case when add_months(trunc(sysdate,'MM') + (extract(day from vcl.due_Date)-1),1) - trunc(sysdate) < 30 then
+                            add_months(trunc(sysdate,'MM') + (extract(day from vcl.due_Date)-1),2)-3
+                    else add_months(trunc(sysdate,'MM') + (extract(day from vcl.due_Date)-1),1)-3 
+             end
+             else add_months(trunc(sysdate), 1) -3
+        end first_due_Date, ccl.min_instalment, tcl.mobile3, tcl.mobile4, tcl.info3, tcl.info4, tcl.info5, tcl.info6, tcl.info7, tcl.info8, tcl.info9, tcl.info10
+        from AP_CRM.CAMP_ORBP_TDY_CALL_LIST tcl
+        inner join ap_crm.camp_orbp_compiled_list ccl on ccl.id_cuid = tcl.cuid
+        left join ap_Crm.v_Camp_last_contract vcl on tcl.contract_id = vcl.contract
+        left join ap_Crm.camp_tzone_dist_map tzo on lower(tcl.name_district) = lower(tzo.name_district)
+        --LEFT JOIN AP_CRM.CAMP_SMS_FF_BASE SMS ON SMS.CAMPAIGN_ID = TO_CHAR(SYSDATE, 'YYMM') AND SMS.CALL_TO_ACTION = 'TOLL FREE' AND TCL.CUID = SMS.ID_CUID
+        where lower(info2) not like 'do not call%'
+    ),
+    tcl as
+    (
+        select distinct ax.* from 
+        (
+            select bcl.* from bcl where bcl.info2 not like '7%'
+            union all
+            select bcl.* from bcl where bcl.info2 like '7%' 
+        )ax
+    ),
+    my_dream as
+    (
+        select /*+ MATERIALIZE */ cuid, loan_purpose_id, replace(replace(loan_purpose_desc,chr(10),''),chr(13),'')loan_purpose_desc, status_active from ap_bicc.STGV_MOB_MD_CUSTOMER bid
+        where cuid in (select cuid from bcl) and bid."STATUS_ACTIVE" = 1    
+    )
+    select ax.cuid, contract_id, first_name, last_name, max_credit_amount,
+    max_installment, mother_maiden_name, place_of_birth, birth_date,
+    id_ktp, expiry_date_ktp, mobile1, mobile2, email_address, full_address, name_town,
+    name_subdistrict, code_zip, 
+    name_district, 
+    case when md.loan_purpose_desc is not null then info1 || ', My Dream : ' || nvl(md.loan_purpose_desc,'') 
+         else info1
+    end  info1, 
+    info2, 
+    tzone, row_order nums, 'OFFER_REGULAR' campaign_type, first_due_Date, min_instalment, mobile3, mobile4, info3, info4, info5, info6, info7, info8, info9, info10, trunc(sysdate)
+    from
+    (   /* (order by timezone, channel, max_credit_amount, priority, attempt) */
+        select az.*, row_number() over (order by az.nums) row_order from
+        (
+            select '1.' || trim(to_char(row_number() over (order by tcl.tzone, to_number(substr(tcl.info2,1,1))asc, tcl.attempt_last30d asc, tcl.max_credit_amount desc ),'00000009'))nums, tcl.cuid,  contract_id,  
+            tcl.first_name, tcl.LAST_NAME, tcl.MAX_CREDIT_AMOUNT,
+            tcl.MAX_INSTALLMENT, tcl.MOTHER_MAIDEN_NAME, tcl.PLACE_OF_BIRTH, tcl.BIRTH_DATE,
+            tcl.ID_KTP, tcl.EXPIRY_DATE_KTP, tcl.MOBILE1, tcl.MOBILE2, tcl.EMAIL_ADDRESS,
+            tcl.FULL_ADDRESS, tcl.NAME_TOWN, tcl.NAME_SUBDISTRICT, tcl.CODE_ZIP, tcl.NAME_DISTRICT,
+            tcl.info1,  tcl.info2, replace(tzone, substr(tcl.TZONE,0,3),'')tzone, tcl.first_due_Date, tcl.min_instalment, tcl.mobile3, tcl.mobile4, tcl.info3, tcl.info4, tcl.info5, tcl.info6, tcl.info7, tcl.info8, tcl.info9, tcl.info10
+            from tcl where to_number(substr(tcl.info2,1,1)) <> 7
+            union all
+            select '2.' || trim(to_char(row_number() over (order by substr(tcl.info2, 1,4), tcl.attempt_last30d asc, tcl.max_credit_amount desc),'00000009'))nums, tcl.cuid,  contract_id,  
+            tcl.first_name, tcl.LAST_NAME, tcl.MAX_CREDIT_AMOUNT,
+            tcl.MAX_INSTALLMENT, tcl.MOTHER_MAIDEN_NAME, tcl.PLACE_OF_BIRTH, tcl.BIRTH_DATE,
+            tcl.ID_KTP, tcl.EXPIRY_DATE_KTP, tcl.MOBILE1, tcl.MOBILE2, tcl.EMAIL_ADDRESS,
+            tcl.FULL_ADDRESS, tcl.NAME_TOWN, tcl.NAME_SUBDISTRICT, tcl.CODE_ZIP, tcl.NAME_DISTRICT,
+            tcl.info1,  tcl.info2, replace(tzone, substr(tcl.TZONE,0,3),'')tzone, tcl.first_due_Date, tcl.min_instalment, tcl.mobile3, tcl.mobile4, tcl.info3, tcl.info4, tcl.info5, tcl.info6, tcl.info7, tcl.info8, tcl.info9, tcl.info10
+            from tcl where substr(tcl.info2,1,4) in ('7.01','7.02','7.03','7.04','7.05','7.06')
+            union all
+            select '3.' || trim(to_char(row_number() over (order by tcl.pilot_score desc, tcl.attempt_last30d asc),'00000009'))nums, tcl.cuid,  contract_id,  
+            tcl.first_name, tcl.LAST_NAME, tcl.MAX_CREDIT_AMOUNT,
+            tcl.MAX_INSTALLMENT, tcl.MOTHER_MAIDEN_NAME, tcl.PLACE_OF_BIRTH, tcl.BIRTH_DATE,
+            tcl.ID_KTP, tcl.EXPIRY_DATE_KTP, tcl.MOBILE1, tcl.MOBILE2, tcl.EMAIL_ADDRESS,
+            tcl.FULL_ADDRESS, tcl.NAME_TOWN, tcl.NAME_SUBDISTRICT, tcl.CODE_ZIP, tcl.NAME_DISTRICT,
+            tcl.info1,  tcl.info2, replace(tzone, substr(tcl.TZONE,0,3),'')tzone, tcl.first_due_Date, tcl.min_instalment, tcl.mobile3, tcl.mobile4, tcl.info3, tcl.info4, tcl.info5, tcl.info6, tcl.info7, tcl.info8, tcl.info9, tcl.info10
+            from tcl where substr(tcl.info2,1,4) in ('7.07', '7.08')
+            union all
+            select '4.' || trim(to_char(row_number() over (order by substr(tcl.info2, 1,4), tcl.attempt_last30d asc, tcl.max_credit_amount desc),'00000009'))nums, tcl.cuid,  contract_id,  
+            tcl.first_name, tcl.LAST_NAME, tcl.MAX_CREDIT_AMOUNT,
+            tcl.MAX_INSTALLMENT, tcl.MOTHER_MAIDEN_NAME, tcl.PLACE_OF_BIRTH, tcl.BIRTH_DATE,
+            tcl.ID_KTP, tcl.EXPIRY_DATE_KTP, tcl.MOBILE1, tcl.MOBILE2, tcl.EMAIL_ADDRESS,
+            tcl.FULL_ADDRESS, tcl.NAME_TOWN, tcl.NAME_SUBDISTRICT, tcl.CODE_ZIP, tcl.NAME_DISTRICT,
+            tcl.info1,  tcl.info2, replace(tzone, substr(tcl.TZONE,0,3),'')tzone, tcl.first_due_Date, tcl.min_instalment, tcl.mobile3, tcl.mobile4, tcl.info3, tcl.info4, tcl.info5, tcl.info6, tcl.info7, tcl.info8, tcl.info9, tcl.info10
+            from tcl where substr(tcl.info2,1,4) not in ('7.01','7.02','7.03','7.04','7.05','7.06','7.07', '7.08') and to_number(substr(tcl.info2,1,1)) >= 7
+         )az 
+    )ax 
+    left join my_dream md on ax.cuid = md.cuid
+    where 1=1 
+    and ax.row_order <= 180000;
     AP_PUBLIC.CORE_LOG_PKG.pEnd ;
     commit;
-    pstats('camp_offer_call_list_final');
+    pstats('CAMP_ORBP_CALL_LIST_FINAL');
 <<finish_line>>
     
 AP_PUBLIC.CORE_LOG_PKG.pFinish;
