@@ -16,8 +16,8 @@ CREATE OR REPLACE PROCEDURE CAMP_RAW_CLIENT_IDENTITY AS
 BEGIN
     AP_PUBLIC.CORE_LOG_PKG.pInit( 'AP_CRM', 'CAMP_RAW_CLIENT_IDENTITY');
     pTruncate('GTT_CMP_CLID_ELIG');
-    --execute immediate 'truncate table ap_Crm.gtt_cmp_clid_elig';
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CLID_ELIG');
+    
+		AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CLID_ELIG');
     insert /*+ APPEND */ into ap_Crm.gtt_cmp_clid_elig
     select /*+ USE_HASH(DCS FS EB) */
     eb.skp_client,            eb.id_cuid,                 initcap(eb.name_full)name_full, 
@@ -27,11 +27,21 @@ BEGIN
     dcl.CNT_PERSON_DEPENDENT  dependent_person,           eb.main_income,                     eb.OTHER_INCOME,
     eb.AMT_EXPENSE_DEBT,      eb.SUM_AMT_ANNUITY_ACTIVE,  eb.total_paid_amount,               eb.total_overpaid_amount
     from AP_CRM.CAMP_ELIG_BASE eb
-    left join owner_Dwh.dc_client dcl on eb.skp_Client = dcl.skp_Client
-    left join owner_Dwh.cl_family_status fs on dcl.skp_family_status = fs.skp_family_status
-    where 1=1 
-    --and (eb.sid_result = 'SID_OK' or eb.sid_result is null) 
-    and eb.ELIGIBLE_FINAL_FLAG = 1 and eb.PRIORITY_ACTUAL > 0;
+    join owner_Dwh.dc_client dcl on eb.skp_Client = dcl.skp_Client
+    join owner_Dwh.cl_family_status fs on dcl.skp_family_status = fs.skp_family_status
+    where eb.ELIGIBLE_FINAL_FLAG = 1 and eb.PRIORITY_ACTUAL > 0
+		union all
+		select /*+ USE_HASH(DCS FS EB) */
+    eb.skp_client,            eb.id_cuid,                 initcap(eb.name_full)name_full, 
+    eb.name_first,            eb.name_middle,             eb.name_last,                       dcl.NAME_MOTHER, 
+    eb.date_birth,            eb.name_birth_place,        dcl.NAME_GENDER gender,             dcl.code_religion, eb.code_employment_type, 
+    eb.code_education_type,   eb.code_employer_industry,  fs.NAME_FAMILY_STATUS family_status,
+    dcl.CNT_PERSON_DEPENDENT  dependent_person,           eb.main_income,                     eb.OTHER_INCOME,
+    eb.AMT_EXPENSE_DEBT,      eb.SUM_AMT_ANNUITY_ACTIVE,  eb.total_paid_amount,               eb.total_overpaid_amount
+    from AP_CRM.camp_orbp_elig_base eb
+    join owner_Dwh.dc_client dcl on eb.skp_Client = dcl.skp_Client
+    join owner_Dwh.cl_family_status fs on dcl.skp_family_status = fs.skp_family_status
+    where eb.ELIGIBLE_FINAL_FLAG = 1 and eb.PRIORITY_ACTUAL > 0;
     AP_PUBLIC.CORE_LOG_PKG.pEnd ;
     commit;
     pStats('GTT_CMP_CLID_ELIG');
@@ -163,33 +173,7 @@ BEGIN
     commit;
     pStats('camp_comm_rec_wn');
 
-/*    pTruncate('GTT_CMP_CLID_WN');
-    --execute immediate 'truncate table AP_CRM.GTT_CMP_CLID_WN';
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CLID_WN');
-    insert \*+ APPEND *\ into AP_CRM.GTT_CMP_CLID_WN
-    SELECT \*+ *\ FCR.SKP_CLIENT, FCR.TEXT_CONTACT,  COUNT(1) FR
-    FROM AP_CRM.CAMP_COMM_REC_OB FCR 
-    where skp_client in (select nvl(skp_client,-9999) from AP_CRM.GTT_CMP_CLID_ELIG)
-         AND FCR.DATE_CALL BETWEEN  TO_DATE('01.03.2015', 'dd.mm.yyyy' ) AND SYSDATE  --CL.REP_DATE AND CL.REP_DATE +5
-         AND UPPER(FCR.CODE_TYPE_CODE) = 'MPF'
-         and upper(fcr.code_status) = 'NPI'
-         --AND lower(trim(FCR.TEXT_NOTE)) IN ('fake contact', 'family', 'other family', 'friend', 'wn', 'salah sambung','no telepon salah','tidak mengenal pelanggan')
-    GROUP BY FCR.SKP_CLIENT, FCR.TEXT_CONTACT
-		union
-    SELECT \*+ *\ FCR.SKP_CLIENT, FCR.TEXT_CONTACT,  COUNT(1) FR
-    FROM AP_CRM.CAMP_COMM_REC_OB FCR 
-    where skp_client in (select nvl(skp_client,-9999) from AP_CRM.GTT_CMP_CLID_ELIG)
-         AND FCR.DATE_CALL BETWEEN  TO_DATE('01.03.2015', 'dd.mm.yyyy' ) AND SYSDATE  --CL.REP_DATE AND CL.REP_DATE +5
-         AND UPPER(FCR.CODE_TYPE_CODE) = 'MPF'
-         and upper(fcr.code_comm_subtype_sub_specif) = 'INVLD_NUM'
-         --AND lower(trim(FCR.TEXT_NOTE)) IN ('fake contact', 'family', 'other family', 'friend', 'wn', 'salah sambung','no telepon salah','tidak mengenal pelanggan')
-    GROUP BY FCR.SKP_CLIENT, FCR.TEXT_CONTACT;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('GTT_CMP_CLID_WN');*/
-
     pTruncate('GTT_CMP_CLID_PHONE');
-    --execute immediate 'truncate table AP_CRM.GTT_CMP_CLID_PHONE';
     AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CLID_PHONE');
     insert /*+ APPEND */ into AP_CRM.GTT_CMP_CLID_PHONE
 		with clc as
@@ -213,8 +197,6 @@ BEGIN
 				JOIN OWNER_DWH.CL_CONTACT_TYPE CT2 ON CLC.SKP_CONTACT_TYPE = CT2.SKP_CONTACT_TYPE
 																					AND CT2.ID_SOURCE IN ('PRIMARY_MOBILE', 'SECONDARY_MOBILE', 'MOBILE' )
 				left join camp_comm_rec_wn wn on CLC.SKP_CLIENT = WN.SKP_CLIENT AND WN.TEXT_CONTACT = CLC.TEXT_CONTACT
-				--and clc.text_contact not in (select text_contact from camp_comm_rec_wn we join gtt_cmp_clid_elig el on we.skp_client = el.skp_client)
-		    
 		),
 		fin as
 		(
@@ -230,7 +212,6 @@ BEGIN
     pStats('GTT_CMP_CLID_PHONE');
     
     pTruncate('GTT_CMP_CLID_ADDRESS');
-    --execute immediate 'truncate table AP_CRM.GTT_CMP_CLID_ADDRESS';
     AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CLID_ADDRESS');
     insert /*+ APPEND */ into AP_CRM.GTT_CMP_CLID_ADDRESS
     with base as
@@ -238,7 +219,6 @@ BEGIN
         select fca.skp_client, fca.skp_address
         FROM OWNER_DWH.F_CLIENT_ADDRESS_TT fca
 				JOIN OWNER_DWH.CL_ADDRESS_TYPE     CAT ON FCA.SKP_ADDRESS_TYPE = CAT.SKP_ADDRESS_TYPE
-        --join AP_CRM.GTT_CMP_CLID_ELIG elig on fca.skp_client = elig.skp_client
 				WHERE fca.skp_client in (select nvl(skp_client,-9999) from AP_CRM.GTT_CMP_CLID_ELIG)
              and  CODE_ADDRESS_TYPE IN ('CONTACT') AND FCA.FLAG_CURRENT IN ('Y') AND FCA.CODE_STATUS IN ('a')
     )
@@ -260,7 +240,6 @@ BEGIN
     pStats('GTT_CMP_CLID_ADDRESS');
 
     pTruncate('GTT_CMP_CLID_DEAD');
-    --execute immediate 'truncate table ap_crm.gtt_cmp_clid_dead';
     AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CLID_DEAD');
     insert /*+ APPEND */ into ap_crm.gtt_cmp_clid_dead
     SELECT /*+ MATERIALIZE USE_HASH(T CAD) */ CAD.SKP_CLIENT, T.CONTRACT_ID 
@@ -272,7 +251,6 @@ BEGIN
     pStats('GTT_CMP_CLID_DEAD');
 
     pTruncate('CAMP_CLIENT_IDENTITY');
-    --execute immediate 'truncate table ap_crm.camp_client_identity';
     AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:CAMP_CLIENT_IDENTITY');
     insert /*+ APPEND */ into ap_crm.camp_client_identity
     select /*+ */ eb.skp_client,   eb.id_cuid,                 initcap(eb.name_full)name_full, 
@@ -400,60 +378,6 @@ end if;
 /***********************************************************************************************************************************************************/
 
 /************************************************ Calculating Phone Number Attempt and Responses ***********************************************************/
-/*    ptruncate('gtt_camp_indo_number');
-    AP_PUBLIC.CORE_LOG_PKG.pStart('ins:gtt_camp_indo_number');
-    insert into ap_crm.gtt_camp_indo_number (id_cuid, text_number, last_call_date, last_call_result, last_disp_code)
-    select \*+ *\ distinct cuid, contact_info, date_call, call_result, disposition_code 
-    from ap_crm.contact_attempt_fact_crm
-    where (cuid, contact_info, contact_attempt_fact_key) in
-    (
-        select cuid, contact_info, max(contact_attempt_fact_key)contact_attempt_fact_key from ap_crm.contact_attempt_fact_crm
-        where date_call >= trunc(sysdate-356)
-        and contact_info in (select text_contact from camp_alt_number where nvl(flag_status,1) = 1)
-        group by cuid, contact_info
-    );
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('GTT_CAMP_INDO_NUMBER');
-
-    AP_PUBLIC.CORE_LOG_PKG.pStart('merge:camp_alt_number');
-    merge into ap_crm.camp_alt_number tgt
-    using
-    (
-        select distinct id_cuid, text_number, last_call_date, last_call_result, last_disp_code
-        from ap_crm.gtt_camp_indo_number 
-    )src on (tgt.id_cuid = src.id_cuid and tgt.text_contact = src.text_number)
-    when matched then update 
-    set tgt.last_call_date = src.last_call_date,   tgt.last_call_result = src.last_call_result,   tgt.last_disp_code = src.last_disp_code;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('camp_alt_number');*/
-    
-/*    ptruncate('gtt_camp_indo_number');
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Alternate Number - Update call attempt that failed');
-    insert \*+ APPEND *\ into ap_crm.gtt_camp_indo_number (id_cuid, text_number, fail_attempt_count, flag_status)
-    select  distinct cuid, contact_info, count(distinct 1)attempt, case when count(distinct 1) > 70 then '0' else '1' end flag_status 
-    from ap_crm.contact_attempt_fact_crm
-    where date_call >= trunc(sysdate-68)
-    and contact_info in (select text_contact from camp_alt_number where flag_status = 1)
-    and lower(call_result) in ('no dial tone', 'silence', 'sit invalid number', 'fax detected', 'answering machine detected', 'sit nc (no circuit)','wrong number','dial error')
-    group by cuid, contact_info;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd;    
-    commit;
-    pStats('GTT_CAMP_INDO_NUMBER');*/
-    
-/*    AP_PUBLIC.CORE_LOG_PKG.pStart('merge:camp_alt_number');
-    merge into ap_crm.camp_alt_number tgt
-    using 
-    (
-        select distinct id_cuid, text_number, fail_attempt_count, flag_status
-        from ap_crm.gtt_camp_indo_number --where flag_status = 0
-    )src on (tgt.id_cuid = src.id_cuid and tgt.text_contact = src.text_number)
-    when matched then update set tgt.fail_attempt_count = src.fail_attempt_count,  tgt.flag_status = src.flag_status;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('camp_alt_number');*/
-    
     AP_PUBLIC.CORE_LOG_PKG.pStart('ins:camp_identity_wn');
     merge into camp_identity_wn tgt
     using 
@@ -502,142 +426,6 @@ end if;
     commit;  
     pStats('camp_alt_number');
     
-/*    AP_PUBLIC.CORE_LOG_PKG.pStart('Alternate Number - Retrieve new number from no dial tone customer');
-    \* Retrieve new number *\
-    merge into ap_crm.camp_indo_number tgt
-    using
-    (
-        select \*+ *\ distinct clf.cuid, indor.text_phone_num_clean, null last_call_date, null last_call_result, null last_disposition_code, null fail_attempt_count, 1 flag_status 
-        from ap_crm.camp_tdy_call_list clf
-        left join ap_crm.camp_compiled_list cpl on clf.cuid = cpl.id_cuid
-        left join 
-        (
-              select skp_client, text_phone_num_clean from ap_bicc.f_indomaret_payment_ad
-              where (skp_client, payment_id) in
-              (
-                  SELECT skp_client, max(payment_id) from ap_bicc.f_indomaret_payment_ad
-                  where length(text_phone_num_clean) > 6
-                  and text_phone_num_clean not in (select nvl(text_number,'-') from camp_indo_number where flag_status = 0)
-                  and flag_cif_number = 'N' and flag_valid_phone_number = 'Y'
-                  and text_phone_num_clean not in (select text_phone_num_clean from ap_bicc.f_indomaret_payment_ad group by text_phone_num_clean having count(skp_client) > 1)
-                  group by skp_client
-              )
-        )indor on cpl.skp_client = indor.skp_client
-        where 1=1
-        and cuid in 
-        (
-              SELECT ID_CUID FROM CRM_INDOMAR_CUID_LIST WHERE CAMPAIGN_ID = TO_CHAR(SYSDATE, 'YYMM')
-        )
-        and indor.text_phone_num_clean like '8%'
-    )src on (tgt.text_number = src.text_phone_num_clean)
-    when not matched then insert
-    (
-         tgt.id_cuid, tgt.text_number,     tgt.last_call_date,   tgt.last_call_result,  tgt.last_disp_code, tgt.fail_attempt_count,   tgt.flag_status
-    )
-    values
-    (
-         src.cuid, src.text_phone_num_clean,   src.last_call_date, src.last_call_result, src.last_disposition_code, src.fail_attempt_count, src.flag_status
-    );
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('CAMP_INDO_NUMBER');
-
-    pTruncate(upper('gtt_camp_indo_number'));
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Alternate Number - Retrieve last call information');
-    insert into ap_crm.gtt_camp_indo_number (id_cuid, text_number, last_call_date, last_call_result, last_disp_code)
-    select \*+  *\ distinct cuid, contact_info, date_call, call_result, disposition_code from ap_crm.contact_attempt_fact_crm
-    where (cuid, contact_info, contact_attempt_fact_key) in
-    (
-        select cuid, contact_info, max(contact_attempt_fact_key)contact_attempt_fact_key from ap_crm.contact_attempt_fact_crm
-        where date_call >= trunc(sysdate-68)
-        and contact_info in (select text_number from camp_indo_number where flag_status = 1)
-        group by cuid, contact_info
-    );
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('GTT_CAMP_INDO_NUMBER');    
-    
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Alternate Number - Merges last call information');
-    \* Retrieve last call information *\
-    merge into ap_crm.camp_indo_number tgt
-    using
-    (
-        select distinct id_cuid, text_number, last_call_date, last_call_result, last_disp_code
-        from ap_crm.gtt_camp_indo_number where flag_status = 0
-    )src on (tgt.id_cuid = src.id_cuid and tgt.text_number = src.text_number)
-    when matched then update 
-    set tgt.last_call_date = src.last_call_date,   tgt.last_call_result = src.last_call_result,   tgt.last_disp_code = src.last_disp_code;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('CAMP_INDO_NUMBER');
-    
-    pTruncate(upper('gtt_camp_indo_number'));
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Alternate Number - Update call attempt that failed');
-    insert into ap_crm.gtt_camp_indo_number (id_cuid, text_number, fail_attempt_count, flag_status)
-    select \*+ *\ distinct cuid, contact_info, count(1)attempt, case when count(1) > 25 then '0' else '1' end flag_status 
-    from ap_crm.contact_attempt_fact_crm
-    where date_call >= trunc(sysdate-68)
-    and contact_info in (select text_number from camp_indo_number where flag_status = 1)
-    and lower(call_result) in ('no dial tone', 'silence', 'sit invalid number', 'fax detected', 'answering machine detected', 'sit nc (no circuit)','wrong number','dial error')
-    group by cuid, contact_info;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd;    
-    commit;
-    pStats('GTT_CAMP_INDO_NUMBER');
-    
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Alternate Number - Update call attempt that failed');        
-    \* Update call attempt that failed *\
-    merge into ap_crm.camp_indo_number tgt
-    using 
-    (
-        select distinct id_cuid, text_number, fail_attempt_count, flag_status
-        from ap_crm.gtt_camp_indo_number where flag_status = 0
-    )src on (tgt.id_cuid = src.id_cuid and tgt.text_number = src.text_number)
-    when matched then update set tgt.fail_attempt_count = src.fail_attempt_count,  tgt.flag_status = src.flag_status;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;    
-    pStats('CAMP_INDO_NUMBER');
-
-    pTruncate(upper('gtt_camp_indo_number'));    
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Alternate Number - Collect wrong number attempt');
-    insert into ap_crm.gtt_camp_indo_number (id_cuid, text_number, flag_status)
-    with base as
-    (
-        select \*+ USE_HASH(DCC CCI CLF) MATERIALIZE *\ distinct clf.cuid, dcc.skp_credit_case, cci.skp_client, mobile1 
-        from ap_crm.log_camp_offer_call_list_final clf
-        left join ap_crm.log_camp_compiled_list cci on clf.cuid = cci.id_cuid and cci.log_date >= trunc(sysdate-38)
-        left join owner_dwh.dc_credit_Case dcc on clf.contract_id = dcc.text_contract_number
-        where clf.log_date >= trunc(sysdate-38) and lower(info1) like 'indomaret%' --select column with flag indomaret
-    ),
-    comm_recs as
-    (
-        select distinct base.cuid, cro.skp_client, cro.skp_credit_case, cro.date_call, cro.text_contact, cro.text_note, cro.code_status
-        from ap_crm.camp_comm_rec_ob cro
-        left join owner_Dwh.Cl_Communication_Result_Type ccr on cro.skp_communication_result_type = ccr.skp_communication_result_type
-        left join owner_Dwh.cl_communication_status ccs on cro.skp_communication_status = ccs.SKP_COMMUNICATION_STATUS
-        inner join base on cro.skp_client = base.skp_client and cro.skp_credit_case = base.skp_credit_case
-        where date_call >= trunc(sysdate-38) and code_subtype = 'MPF_TLSO_OFF' and (cro.skp_client, cro.skp_credit_Case) in (select skp_client, skp_credit_case from base) and cro.code_status in ('NPI','TPC','RPC') --code_subtype
-    )
-    select distinct cin.id_cuid, cin.text_number, case when cr.code_status is not null then '0' else '1' end flag_status
-    from ap_crm.camp_indo_number cin
-    left join ap_crm.comm_recs cr on cin.id_cuid = cr.cuid and cin.text_number = cr.text_contact
-    where cin.flag_status = 1;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('GTT_CAMP_INDO_NUMBER');    
-    
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Alternate Number - Update wrong number');    
-    merge into ap_crm.camp_indo_number tgt
-    using
-    (
-        select distinct id_cuid, text_number, flag_status
-        from ap_crm.gtt_camp_indo_number where flag_status = 0
-    )src on (tgt.id_cuid = src.id_cuid and tgt.text_number = src.text_number)
-    when matched then update set tgt.flag_status = src.flag_status;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('CAMP_INDO_NUMBER');*/
 <<finish_line>>
     AP_PUBLIC.CORE_LOG_PKG.pFinish ;
 END;
-/
-
