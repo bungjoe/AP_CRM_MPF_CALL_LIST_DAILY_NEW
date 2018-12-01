@@ -155,10 +155,12 @@ end if;
     FROM OWNER_DWH.F_COMMUNICATION_RECORD_TT FCR
     WHERE fcr.dtime_inserted >= trunc(sysdate-7)
       and FCR.SKP_CLIENT IN
-          ( select skp_client from ap_crm.camp_elig_base where eligible_final_flag = 1 and priority_actual > 0 )
+          ( select skp_client from ap_crm.camp_elig_base where eligible_final_flag = 1 and priority_actual > 0
+					  union all
+						select skp_client from ap_crm.camp_orbp_offer
+					)
       And FCR.SKF_COMMUNICATION_RECORD NOT IN
-          ( 
-            SELECT SKF_COMMUNICATION_RECORD FROM AP_CRM.CAMP_COMM_REC_OB
+          ( SELECT SKF_COMMUNICATION_RECORD FROM AP_CRM.CAMP_COMM_REC_OB
             UNION ALL
             SELECT SKF_COMMUNICATION_RECORD FROM AP_CRM.CAMP_COMM_REC_IB
           )
@@ -221,7 +223,7 @@ where (';
 		pStats('gtt_cmp_rtn_02_commlist');
 		
     AP_PUBLIC.CORE_LOG_PKG.pStart('MERGE:CAMP_COMM_REC_OB');
-		merge /*+ PARALLEL(4) */ into camp_comm_rec_ob tgt
+		merge /*+  */ into camp_comm_rec_ob tgt
 		using
 		(
 				select date_call, dtime_inserted, skf_communication_record, skp_client, skp_credit_case,
@@ -261,10 +263,10 @@ where (';
 		);
 		AP_PUBLIC.CORE_LOG_PKG.pEnd;
 		commit;
-		pStats('CAMP_COMM_REC_OB');  
+		--pStats('CAMP_COMM_REC_OB');  
 	 
 		AP_PUBLIC.CORE_LOG_PKG.pStart('MERGE:CAMP_COMM_REC_IB');
-		merge /*+ PARALLEL(4) */ into camp_comm_rec_ib tgt
+		merge /*+  */ into camp_comm_rec_ib tgt
 		using
 		(
 				select date_call, dtime_inserted, skf_communication_record, skp_client, skp_credit_case,
@@ -304,10 +306,10 @@ where (';
 		);
 		AP_PUBLIC.CORE_LOG_PKG.pEnd;
 		commit;
-		pStats('CAMP_COMM_REC_IB');
+		--pStats('CAMP_COMM_REC_IB');
 	  
 		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:CAMP_COMM_RES_PART');
-		merge /*+ PARALLEL(4) */ into camp_comm_res_part tgt
+		merge /*+ */ into camp_comm_res_part tgt
 		using
 		(
 					select skf_comm_result_part, skf_communication_record, code_comm_result_part, text_value, dtime_inserted from owner_Dwh.f_Comm_Result_Part_Tt
@@ -323,9 +325,7 @@ where (';
 		);
 		AP_PUBLIC.CORE_LOG_PKG.pEnd;
 		commit;
-		pStats('CAMP_COMM_RES_PART');
+		--pStats('CAMP_COMM_RES_PART');
 <<finish_line>>    
 		AP_PUBLIC.CORE_LOG_PKG.pFinish ;
 END;
-/
-
