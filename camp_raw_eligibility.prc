@@ -31,40 +31,40 @@ end if;
     AP_PUBLIC.CORE_LOG_PKG.pEnd;
 
     pTruncate('gtt_camp_client_at');
-		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:gtt_camp_client_at');
-		insert /*+ APPEND */ into gtt_camp_client_at
-		select /*+ */
-					SKF_CAMPAIGN_CLIENT ,CODE_SOURCE_SYSTEM
-					,ID_SOURCE          ,DATE_EFFECTIVE
-					,SKP_PROC_INSERTED  ,SKP_PROC_UPDATED
-					,FLAG_DELETED       ,SKP_CAMPAIGN
-					,SKP_CLIENT         ,SKP_CREDIT_CASE
-					,SKP_GOODS_TYPE     ,SKP_MARKETING_ACTION
-					,ID_CAMPAIGN        ,CODE_SEGMENT
-					,CODE_CAMPAIGN_TYPE ,CODE_CAMPAIGN_SUB_TYPE
-					,CODE_PRODUCT_TYPE  ,NAME_OFFER
-					,FLAG_OFFER         ,AMT_CREDIT_MAX
-					,AMT_ANNUITY_MAX    ,AMT_DOWN_PAYMENT_MIN
-					,DATE_VALID_FROM    ,DATE_VALID_TO
-					,FLAG_RESPONDED     ,SKP_CAMPAIGN_SUBTYPE
-					,SKP_CAMPAIGN_TYPE  ,CNT_CAMPAIGN_CLIENT
-					,DTIME_EXPIRATION_OFFER, FLAG_ACTIVE
-					,FLAG_RECALCULATED  ,ID_OFFER
-		from owner_dwh.f_campaign_client_at cca
-		where (skp_client, date_valid_from) in
-		(
-				select skp_client, max(date_valid_from)date_valid_from from owner_dwh.f_campaign_client_at 
-				where trunc(sysdate) between date_valid_from and date_valid_to and flag_active = 'Y'
-				group by skp_client
-		)and cca.flag_active = 'Y';
+    AP_PUBLIC.CORE_LOG_PKG.pStart('INS:gtt_camp_client_at');
+    insert /*+ APPEND */ into gtt_camp_client_at
+    select /*+ */
+          SKF_CAMPAIGN_CLIENT ,CODE_SOURCE_SYSTEM
+          ,ID_SOURCE          ,DATE_EFFECTIVE
+          ,SKP_PROC_INSERTED  ,SKP_PROC_UPDATED
+          ,FLAG_DELETED       ,SKP_CAMPAIGN
+          ,SKP_CLIENT         ,SKP_CREDIT_CASE
+          ,SKP_GOODS_TYPE     ,SKP_MARKETING_ACTION
+          ,ID_CAMPAIGN        ,CODE_SEGMENT
+          ,CODE_CAMPAIGN_TYPE ,CODE_CAMPAIGN_SUB_TYPE
+          ,CODE_PRODUCT_TYPE  ,NAME_OFFER
+          ,FLAG_OFFER         ,AMT_CREDIT_MAX
+          ,AMT_ANNUITY_MAX    ,AMT_DOWN_PAYMENT_MIN
+          ,DATE_VALID_FROM    ,DATE_VALID_TO
+          ,FLAG_RESPONDED     ,SKP_CAMPAIGN_SUBTYPE
+          ,SKP_CAMPAIGN_TYPE  ,CNT_CAMPAIGN_CLIENT
+          ,DTIME_EXPIRATION_OFFER, FLAG_ACTIVE
+          ,FLAG_RECALCULATED  ,ID_OFFER
+    from owner_dwh.f_campaign_client_at cca
+    where (skp_client, date_valid_from) in
+    (
+        select skp_client, max(date_valid_from)date_valid_from from owner_dwh.f_campaign_client_at 
+        where trunc(sysdate) between date_valid_from and date_valid_to and flag_active = 'Y'
+        group by skp_client
+    )and cca.flag_active = 'Y';
     AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-		pStats('gtt_camp_client_at');
-		
-		pTruncate('camp_client_at');
-		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:CAMP_CLIENT_AT');
-		/* Insert only offer for non-oBRP customers */
-		insert /*+ APPEND */ into ap_Crm.CAMP_CLIENT_AT
+    commit;
+    pStats('gtt_camp_client_at');
+    
+    pTruncate('camp_client_at');
+    AP_PUBLIC.CORE_LOG_PKG.pStart('INS:CAMP_CLIENT_AT');
+    /* Insert only offer for non-oBRP customers */
+    insert /*+ APPEND */ into ap_Crm.CAMP_CLIENT_AT
     select /*+ */
         SKF_CAMPAIGN_CLIENT ,CODE_SOURCE_SYSTEM
         ,ID_SOURCE          ,DATE_EFFECTIVE
@@ -82,15 +82,15 @@ end if;
         ,SKP_CAMPAIGN_TYPE  ,CNT_CAMPAIGN_CLIENT
         ,DTIME_EXPIRATION_OFFER, FLAG_ACTIVE
         ,FLAG_RECALCULATED  ,ID_OFFER 
-    from gtt_camp_client_at where skp_client not in (select count(skp_Client) from camp_orbp_pilot where campaign_id = to_Char(sysdate,'yymm'));
-		AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-		pStats('CAMP_CLIENT_AT');
+    from gtt_camp_client_at where skp_client not in (select skp_Client from camp_orbp_pilot where campaign_id = to_Char(sysdate,'yymm'));
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+    commit;
+    pStats('CAMP_CLIENT_AT');
 
     pTruncate('camp_orbp_offer');
-		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:camp_orbp_offer');
+    AP_PUBLIC.CORE_LOG_PKG.pStart('INS:camp_orbp_offer');
     /* Insert only oRBP customers */
-		insert /*+ APPEND */ into ap_Crm.camp_orbp_offer
+    insert /*+ APPEND */ into ap_Crm.camp_orbp_offer
     select /*+ */
         SKF_CAMPAIGN_CLIENT ,CODE_SOURCE_SYSTEM
         ,ID_SOURCE          ,DATE_EFFECTIVE
@@ -108,33 +108,33 @@ end if;
         ,SKP_CAMPAIGN_TYPE  ,CNT_CAMPAIGN_CLIENT
         ,DTIME_EXPIRATION_OFFER, FLAG_ACTIVE
         ,FLAG_RECALCULATED  ,ID_OFFER 
-    from gtt_camp_client_at where skp_client in (select count(skp_Client) from camp_orbp_pilot where campaign_id = to_Char(sysdate,'yymm'));
-		AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-		pStats('camp_orbp_offer');
+    from gtt_camp_client_at where skp_client in (select skp_Client from camp_orbp_pilot where campaign_id = to_Char(sysdate,'yymm'));
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+    commit;
+    pStats('camp_orbp_offer');
 
     pTruncate('camp_offer_recalculation');
-		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:camp_offer_recalculation');
-		insert /*+ APPEND */ into camp_offer_recalculation
-		with base as
-		(
-				select skp_client from camp_orbp_offer_c1
-				where dtime_expiration_offer > trunc(sysdate)
-		)
-		select skf_offer_recalculation, skp_client, skf_offer_rec_main, skf_campaign_client, id_offer, flag_deactivated, id_campaign, 
-							 date_valid_from, date_valid_to, date_expiration_offer, amt_credit_max, amt_instalment_max, text_pricing_category, cnt_instalment, rate_interest,
-							 dtime_obod_generated, dtime_obod_submitted, num_group_position_1 
-		from owner_Dwh.f_offer_recalculation_tt where (skp_Client, skf_offer_recalculation) in
-		(
-				select skp_client, max(skf_offer_recalculation)skf_offer_recalculation from owner_Dwh.f_offer_recalculation_tt
-				where skp_Client in (select skp_client from base)
-					and flag_deactivated = 'N' and num_group_position_1 = 0
-				group by skp_client
-		);
-		AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-		pStats('camp_offer_recalculation');
-		
+    AP_PUBLIC.CORE_LOG_PKG.pStart('INS:camp_offer_recalculation');
+    insert /*+ APPEND */ into camp_offer_recalculation
+    with base as
+    (
+        select skp_client from camp_orbp_offer
+        where dtime_expiration_offer > trunc(sysdate)
+    )
+    select skf_offer_recalculation, skp_client, skf_offer_rec_main, skf_campaign_client, id_offer, flag_deactivated, id_campaign, 
+               date_valid_from, date_valid_to, date_expiration_offer, amt_credit_max, amt_instalment_max, text_pricing_category, cnt_instalment, rate_interest,
+               dtime_obod_generated, dtime_obod_submitted, num_group_position_1 
+    from owner_Dwh.f_offer_recalculation_tt where (skp_Client, skf_offer_recalculation) in
+    (
+        select skp_client, max(skf_offer_recalculation)skf_offer_recalculation from owner_Dwh.f_offer_recalculation_tt
+        where skp_Client in (select skp_client from base)
+          and flag_deactivated = 'N' and num_group_position_1 = 0
+        group by skp_client
+    );
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+    commit;
+    pStats('camp_offer_recalculation');
+    
     pTruncate('gtt_camp_elig_base2');
     AP_PUBLIC.CORE_LOG_PKG.pStart('INS:gtt_camp_elig_base2');
     INSERT /*+ APPEND */ into gtt_camp_elig_base2
@@ -162,18 +162,18 @@ end if;
         ,eb.score_pd                                       ,EB.CNT_ACTIVE_CONTRACTS 
         ,eb.fl_current_eligibility                         ,EB.REASON_NOT_ELIG
         /*,eb.camp_month_calc*/                            
-				,row_number() over (partition by eb.skp_client order by eb.valid_from desc) nums
+        ,row_number() over (partition by eb.skp_client order by eb.valid_from desc) nums
     from ap_risk.eligibility_base eb
-		join gtt_camp_client_at ofr on eb.skp_client = ofr.skp_client
+    join gtt_camp_client_at ofr on eb.skp_client = ofr.skp_client
     where camp_month_calc between add_months(trunc(sysdate,'MM')-1,-1) and last_Day(trunc(sysdate))
-		  and priority_actual is not null; 
-		AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-		pStats('gtt_camp_elig_base2');
-	
-		pTruncate('CAMP_ELIG_BASE');
-		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:CAMP_ELIG_BASE');
-		insert /*+ APPEND */ into camp_elig_base
+      and priority_actual is not null; 
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+    commit;
+    pStats('gtt_camp_elig_base2');
+  
+    pTruncate('CAMP_ELIG_BASE');
+    AP_PUBLIC.CORE_LOG_PKG.pStart('INS:CAMP_ELIG_BASE');
+    insert /*+ APPEND */ into camp_elig_base
     select 
          eb.skp_client                                     ,eb.id_cuid
         ,trim(eb.name_full) name_full                      ,trim(eb.name_first) name_first
@@ -198,10 +198,10 @@ end if;
         ,eb.score_pd                                       ,EB.CNT_ACTIVE_CONTRACTS 
         ,eb.fl_current_eligibility                         ,EB.REASON_NOT_ELIG
     from gtt_camp_elig_base2 eb
-    where (skp_Client, valid_from, valid_to) in (select skp_Client, date_valid_from, date_valid_to from camp_client_at);
-		AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-		pStats('CAMP_ELIG_BASE');
+		join camp_client_at cca on eb.Skp_Client = cca.skp_client and eb.valid_from = cca.date_valid_from and eb.valid_to = cca.date_valid_to;
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+    commit;
+    pStats('CAMP_ELIG_BASE');
 
     pTruncate('camp_orbp_elig_base');
     AP_PUBLIC.CORE_LOG_PKG.pStart('INS:camp_orbp_elig_base');
@@ -230,13 +230,13 @@ end if;
         ,eb.score_pd                                       ,EB.CNT_ACTIVE_CONTRACTS 
         ,eb.fl_current_eligibility                         ,EB.REASON_NOT_ELIG
     from gtt_camp_elig_base2 eb
-    where (skp_Client, valid_from, valid_to) in (select skp_Client, date_valid_from, valid_to from camp_orbp_offer);
+		join camp_orbp_offer cca on eb.Skp_Client = cca.skp_client and eb.valid_from = cca.date_valid_from and eb.valid_to = cca.date_valid_to;
     AP_PUBLIC.CORE_LOG_PKG.pEnd;
     commit;
     pStats('camp_orbp_elig_base');
   
-		pTruncate('CAMP_ELIG_DAILY_CHECK');
-		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:CAMP_ELIG_DAILY_CHECK');
+    pTruncate('CAMP_ELIG_DAILY_CHECK');
+    AP_PUBLIC.CORE_LOG_PKG.pStart('INS:CAMP_ELIG_DAILY_CHECK');
     insert  /*+ APPEND */ into camp_elig_daily_check
     select tgt.CAMPAIGN_ID,   tgt.ID_CUID
           , tgt.MAX_CREDIT_AMOUNT,  tgt.MAX_ANNUITY          , tgt.VALIDITY_PERIOD,    tgt.DPD_HISTORY
@@ -245,14 +245,14 @@ end if;
           , tgt.score,              tgt.risk_group           , tgt.rbp_segment,        tgt.lost_elig_reason
           , tgt.date_check,         tgt.FLAG_STILL_ELIGIBLE
     from AP_RISK.ELIGIBILILITY_DAILY_CHECK tgt
-    join (select id_cuid, valid_from, valid_to from camp_elig_base where eligible_final_flag = 1) ceb 
-    on tgt.id_cuid = ceb.id_cuid and tgt.date_valid_from = ceb.valid_from and tgt.date_valid_to = ceb.valid_to;
-		AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-		pStats('CAMP_ELIG_DAILY_CHECK');
+		join camp_elig_base ceb
+    on tgt.id_cuid = ceb.id_cuid and tgt.date_valid_from = ceb.valid_from and tgt.date_valid_to = ceb.valid_to and ceb.eligible_final_flag = 1;
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+    commit;
+    pStats('CAMP_ELIG_DAILY_CHECK');
 
-		pTruncate('camp_orbp_daily_check');
-		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:camp_orbp_daily_check');
+    pTruncate('camp_orbp_daily_check');
+    AP_PUBLIC.CORE_LOG_PKG.pStart('INS:camp_orbp_daily_check');
     insert  /*+ APPEND */ into camp_orbp_daily_check
     select tgt.CAMPAIGN_ID,   tgt.ID_CUID
           , tgt.MAX_CREDIT_AMOUNT,  tgt.MAX_ANNUITY          , tgt.VALIDITY_PERIOD,    tgt.DPD_HISTORY
@@ -261,50 +261,50 @@ end if;
           , tgt.score,              tgt.risk_group           , tgt.rbp_segment,        tgt.lost_elig_reason
           , tgt.date_check,         tgt.FLAG_STILL_ELIGIBLE
     from AP_RISK.ELIGIBILILITY_DAILY_CHECK tgt
-    join (select id_cuid, valid_from, valid_to from camp_orbp_elig_base where eligible_final_flag = 1) ceb 
-    on tgt.id_cuid = ceb.id_cuid and tgt.date_valid_from = ceb.valid_from and tgt.date_valid_to = ceb.valid_to;
-		AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-		pStats('camp_orbp_daily_check');
+    join camp_orbp_elig_base ceb
+		on tgt.id_cuid = ceb.id_cuid and tgt.date_valid_from = ceb.valid_from and tgt.date_valid_to = ceb.valid_to and ceb.eligible_final_flag = 1;
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+    commit;
+    pStats('camp_orbp_daily_check');
 
-		AP_PUBLIC.CORE_LOG_PKG.pStart('MRG_UPD:F_RBP_SEGMENT_PRICE');
-		/* Update price not existed in current elig base */
-		merge into ap_crm.f_rbp_segment_price tgt
-		using
-		(
-				select risk_band, rbp_segment, tenor, interest_rate from ap_crm.f_rbp_segment_price
-				where status = 'Y'
-				minus
-				select distinct risk_band, rbp_segment_temp rbp_segment, max_tenor tenor, interest_rate from camp_elig_base
-				where priority_actual > 0
-		)src
-		on (tgt.risk_band = src.risk_band and tgt.rbp_segment = src.rbp_segment and tgt.tenor = src.tenor and tgt.interest_rate = src.interest_rate)
-		when matched then
-		update set tgt.status = 'N';
-		AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-		pStats('F_RBP_SEGMENT_PRICE');
+    AP_PUBLIC.CORE_LOG_PKG.pStart('MRG_UPD:F_RBP_SEGMENT_PRICE');
+    /* Update price not existed in current elig base */
+    merge into ap_crm.f_rbp_segment_price tgt
+    using
+    (
+        select risk_band, rbp_segment, tenor, interest_rate from ap_crm.f_rbp_segment_price
+        where status = 'Y'
+        minus
+        select distinct risk_band, rbp_segment_temp rbp_segment, max_tenor tenor, interest_rate from camp_elig_base
+        where priority_actual > 0
+    )src
+    on (tgt.risk_band = src.risk_band and tgt.rbp_segment = src.rbp_segment and tgt.tenor = src.tenor and tgt.interest_rate = src.interest_rate)
+    when matched then
+    update set tgt.status = 'N';
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+    commit;
+    pStats('F_RBP_SEGMENT_PRICE');
 
-		AP_PUBLIC.CORE_LOG_PKG.pStart('MRG_INS:F_RBP_SEGMENT_PRICE');
-		/* Insert price not existed in current elig base */
-		merge into ap_crm.f_rbp_segment_price tgt
-		using
-		(
-				select distinct risk_band, rbp_segment_temp rbp_segment, max_tenor tenor, interest_rate from camp_elig_base
-				where priority_actual > 0
-				minus
-				select risk_band, rbp_segment, tenor, interest_rate from ap_crm.f_rbp_segment_price where status = 'Y'
-		) src
-		on (tgt.risk_band = src.risk_band and tgt.rbp_segment = src.rbp_segment and tgt.tenor = src.tenor and tgt.interest_rate = src.interest_rate)
-		when matched then
-		update
-				set tgt.status = 'Y'
-		when not matched then
-		insert ( risk_band,  rbp_segment, tenor, interest_rate, status )
-		values ( src.risk_band,  src.rbp_segment, src.tenor, src.interest_rate, 'Y');
-		AP_PUBLIC.CORE_LOG_PKG.pEnd;
-		commit;
-		pStats('F_RBP_SEGMENT_PRICE');
+    AP_PUBLIC.CORE_LOG_PKG.pStart('MRG_INS:F_RBP_SEGMENT_PRICE');
+    /* Insert price not existed in current elig base */
+    merge into ap_crm.f_rbp_segment_price tgt
+    using
+    (
+        select distinct risk_band, rbp_segment_temp rbp_segment, max_tenor tenor, interest_rate from camp_elig_base
+        where priority_actual > 0
+        minus
+        select risk_band, rbp_segment, tenor, interest_rate from ap_crm.f_rbp_segment_price where status = 'Y'
+    ) src
+    on (tgt.risk_band = src.risk_band and tgt.rbp_segment = src.rbp_segment and tgt.tenor = src.tenor and tgt.interest_rate = src.interest_rate)
+    when matched then
+    update
+        set tgt.status = 'Y'
+    when not matched then
+    insert ( risk_band,  rbp_segment, tenor, interest_rate, status )
+    values ( src.risk_band,  src.rbp_segment, src.tenor, src.interest_rate, 'Y');
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+    commit;
+    pStats('F_RBP_SEGMENT_PRICE');
 <<finish_line>>
-		AP_PUBLIC.CORE_LOG_PKG.pFinish ;
+    AP_PUBLIC.CORE_LOG_PKG.pFinish ;
 END;
