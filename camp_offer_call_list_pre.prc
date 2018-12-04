@@ -512,6 +512,8 @@ BEGIN
                   case when pt.skp_client is not null then
                             pt.designator || ' - Discount Rp. ' || trim(to_char(pt.annuity_discount, '9,999,999')) || ' New Rate ' || new_rate || '%;' || ' Standard Rate ' || std_rate || '%;'
                        when lower(trim(tlist.pilot_name)) = 'premium offer' then 'Premium Offer'
+                       when tlist.orbp_status = 'SCORED' then 'Real Offer'
+                       when tlist.orbp_status = 'NOT-SCORED' then 'Hook Offer'
                   end
            end LAST_NAME, 
            TList.MAX_CREDIT_AMOUNT as MAX_CREDIT_AMOUNT, 
@@ -642,12 +644,10 @@ BEGIN
     and DT_Reject is null
     and phone.Phone1 is not null
     and TList.Contract is not null
-    and tlist.id_cuid not in (select nvl(cuid, -999999) from ap_crm.v_camp_black_list)
-    ;
+    and tlist.id_cuid not in (select nvl(cuid, -999999) from ap_crm.v_camp_black_list);
     AP_PUBLIC.CORE_LOG_PKG.pEnd;
     commit;
     pStats('CAMP_ORBP_TDY_CALL_LIST');
 
     AP_PUBLIC.CORE_LOG_PKG.pFinish ;
 END;
-\
