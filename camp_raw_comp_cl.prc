@@ -544,9 +544,9 @@ begin
     pStats('CAMP_COMPILED_LIST');
 
     ptruncate('camp_orbp_compiled_list');
-		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:camp_orbp_compiled_list');
+    AP_PUBLIC.CORE_LOG_PKG.pStart('INS:camp_orbp_compiled_list');
     insert /*+ APPEND */ into camp_orbp_compiled_list
-		with Interest_Inb as
+    with Interest_Inb as
     (
        select /*+ MATERIALIZE */ SKP_CLIENT, max(DATE_CALL) DATE_CALL
        from AP_CRM.gtt_camp_ib_intrst
@@ -667,13 +667,12 @@ begin
         group by SKP_CLIENT
     )
     select distinct
-           PRE.period, pre.valid_from, pre.id_cuid, pre.skp_client, pre.contract,
-           pre.name_salesroom, pre.name_full, pre.name_first, pre.name_last, pre.name_birth_place,
-           pre.date_birth, pre.code_employment_type, pre.code_employer_industry, pre.main_income,
-           pre.code_education_type, pre.max_tenor, pre.max_credit_amount, pre.max_instalment, pre.rbp_segment,
-           pre.risk_group, pre.risk_score, pre.type, pre.priority, pre.tdy_priority, pre.first_eligibility, pre.tdy_eligibility,
-           pre.name_mother, pre.id_ktp, pre.expiry_date_ktp, pre.primarym_1, pre.primarym_2, pre.primarym_3, pre.primarym_4, pre.primarym_5, pre.client_email,
-           pre.full_address, pre.name_town, pre.name_subdistrict, pre.code_zip_code, pre.name_district, pre.dead_customer
+           PRE.period, pre.valid_from, pre.id_cuid, pre.skp_client, pre.contract, pre.name_salesroom, pre.name_full, pre.name_first, pre.name_last, 
+           pre.name_birth_place, pre.date_birth, pre.code_employment_type, pre.code_employer_industry, pre.main_income, pre.code_education_type, 
+           pre.max_tenor, pre.max_credit_amount, pre.max_instalment, pre.rbp_segment, pre.risk_group, pre.risk_score, pre.type, pre.priority, 
+           pre.tdy_priority, pre.first_eligibility, pre.tdy_eligibility, pre.name_mother, pre.id_ktp, pre.expiry_date_ktp, pre.primarym_1, 
+           pre.primarym_2, pre.primarym_3, pre.primarym_4, pre.primarym_5, pre.client_email, pre.full_address, pre.name_town, 
+           pre.name_subdistrict, pre.code_zip_code, pre.name_district, pre.dead_customer
             ,Case when LOWER(nvl(PRE.PILOT_NAME,'-')) = '2nd mpf' then
                        case when act_mpf.SKP_CLIENT is not null and act_mpf.create_date >= trunc(add_months(sysdate,-12)) then 'Y' else 'N' end
                  when lower(nvl(PRE.PILOT_NAME,'-')) = 'premium offer' then 'N'
@@ -695,8 +694,11 @@ begin
            ,case when Attempt_3D.CUID is null then 'Y' else 'N' end as Avail_to_Call3D
            ,ATTEMPT_Last30D
            ,ATTEMPT_CURRENT
-           ,lower(pre.pilot_name),
-           ceil((((ceb.interest_rate/100) * pre.max_credit_amount * pre.max_tenor) + pre.max_credit_amount)/pre.max_tenor) + 5000 min_instalment
+           ,lower(pre.pilot_name)
+           ,case when pre.orbp_status = 'NOT-SCORED' then 
+                 ceil((((ceb.interest_rate/100) * pre.max_credit_amount * pre.max_tenor) + pre.max_credit_amount)/pre.max_tenor) + 5000 
+            else null end min_instalment
+           ,pre.orbp_status
     from AP_CRM.camp_orbp_pre_comp PRE /*Flexifast customer basic info: eligibility tdy, customer identity,Communication address */
     left join ap_crm.camp_orbp_elig_base ceb on pre.skp_client = ceb.skp_client
     /* Find Active FlexiFast Contract */
@@ -733,7 +735,7 @@ begin
     left join Rejected on  PRE.SKP_CLIENT = Rejected.SKP_CLIENT;
     AP_PUBLIC.CORE_LOG_PKG.pEnd;
     commit;
-    pStats('camp_orbp_compiled_list');	
-		
+    pStats('camp_orbp_compiled_list');  
+    
     AP_PUBLIC.CORE_LOG_PKG.pFinish ;
 end;
