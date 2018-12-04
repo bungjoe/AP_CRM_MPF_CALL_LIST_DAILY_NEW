@@ -77,42 +77,46 @@ BEGIN
    insert /*+ APPEND */ into camp_orbp_pre_comp
    with eli_monthly as
    (
-       select /*+ MATERIALIZE */ distinct SKP_CLIENT, ID_CUID, initcap(NAME_FULL)name_full,
+       select /*+ MATERIALIZE */ distinct base.SKP_CLIENT, base.ID_CUID, initcap(NAME_FULL)name_full,
               case when lower(base.gender) = 'm' then 'Bpk. ' || NAME_FIRST 
                    when lower(base.gender) = 'f' then 'Ibu. ' || NAME_FIRST else NAME_FIRST end name_first,
-              NAME_LAST,NAME_BIRTH_PLACE,DATE_BIRTH
-              , annuity_limit_final_updated max_instalment, ca_limit_final_updated max_credit_amount, risk_band risk_group
-              , rbp_segment_temp rbp_segment, score
-              ,CODE_EMPLOYMENT_TYPE,CODE_EMPLOYER_INDUSTRY,MAIN_INCOME,CODE_EDUCATION_TYPE,MAX_TENOR,trunc(valid_from) Valid_from,PRIORITY_ACTUAL priority,ELIGIBLE_FINAL_FLAG First_Eligibility
-              ,pilot_name, base.fl_current_eligibility
+              NAME_LAST, NAME_BIRTH_PLACE, DATE_BIRTH, annuity_limit_final_updated max_instalment, ca_limit_final_updated max_credit_amount
+              , risk_band risk_group, rbp_segment_temp rbp_segment, score, CODE_EMPLOYMENT_TYPE, CODE_EMPLOYER_INDUSTRY, MAIN_INCOME
+              , CODE_EDUCATION_TYPE,MAX_TENOR, trunc(valid_from) Valid_from, PRIORITY_ACTUAL priority, ELIGIBLE_FINAL_FLAG First_Eligibility
+              , pilot_name, base.fl_current_eligibility
        from AP_CRM.CAMP_ORBP_ELIG_BASE Base
-       where 
-       SKP_Client in 
-            (SELECT skp_client FROM ap_crm.camp_orbp_offer where lower(trim(FLAG_DELETED)) ='n' )
-       and lower(trim(Base.CAMP_TYPE)) = 'mpf'
-       and priority_actual > 0
-       and eligible_final_flag = 1
+       join ap_crm.camp_orbp_offer ofr on base.skp_client = ofr.skp_client
+       where 1=1
+         and lower(trim(Base.CAMP_TYPE)) = 'mpf'
+         and priority_actual > 0
+         and eligible_final_flag = 1
    ),
    eli_daily as
    (
-       select /*+ MATERIALIZE */ DISTINCT Trunc(Date_Valid_From) Valid_From, ID_CUID,MAX_CREDIT_AMOUNT,MAX_ANNUITY as MAX_INSTALMENT
-             ,RBP_SEGMENT,RISK_GROUP,Type,Priority Tdy_priority,SCORE RISK_SCORE, FLAG_STILL_ELIGIBLE Tdy_eligibility
+       select /*+ MATERIALIZE */ DISTINCT Trunc(Date_Valid_From) Valid_From, eli.ID_CUID, eli.MAX_CREDIT_AMOUNT, eli.MAX_ANNUITY as MAX_INSTALMENT
+             ,eli.RBP_SEGMENT, eli.RISK_GROUP, eli.Type, eli.Priority Tdy_priority, eli.SCORE RISK_SCORE, FLAG_STILL_ELIGIBLE Tdy_eligibility
        from AP_CRM.CAMP_ORBP_DAILY_CHECK ELI
+       join eli_monthly emo on eli.id_cuid = emo.id_cuid
        where 1=1
-       and lower(trim(campaign_type)) = 'mpf'
-       and id_cuid in (select id_cuid from eli_monthly)
+         and lower(trim(campaign_type)) = 'mpf'
    )
    select /*+ USE_HASH (EM ID LST) */ distinct 
           trunc(sysdate) as Period, ed.Valid_From, Em.ID_CUID, EM.SKP_CLIENT
           ,lst.contract, lst.name_salesroom
           ,EM.NAME_FULL, EM.NAME_FIRST, EM.NAME_LAST, EM.NAME_BIRTH_PLACE,EM.DATE_BIRTH
-          ,EM.CODE_EMPLOYMENT_TYPE,EM.CODE_EMPLOYER_INDUSTRY,EM.MAIN_INCOME,EM.CODE_EDUCATION_TYPE,EM.MAX_TENOR
-          ,Em.MAX_CREDIT_AMOUNT, em.MAX_INSTALMENT,Em.RBP_SEGMENT,Em.RISK_GROUP,Em.score RISK_SCORE,
-           ed.Type, EM.Priority, 
+          ,EM.CODE_EMPLOYMENT_TYPE,EM.CODE_EMPLOYER_INDUSTRY,EM.MAIN_INCOME,EM.CODE_EDUCATION_TYPE
+          ,case when rec.skf_offer_recalculation is not null then null else EM.MAX_TENOR end max_tenor
+          ,case when rec.skf_offer_recalculation is not null then
+                ofr.amt_credit_max else em.max_credit_amount end MAX_CREDIT_AMOUNT
+          ,case when rec.skf_offer_recalculation is not null then 
+                ofr.amt_annuity_max else em.MAX_INSTALMENT end max_instalment
+          ,Em.RBP_SEGMENT
+          ,Em.RISK_GROUP,Em.score RISK_SCORE, ed.Type, EM.Priority, 
            coalesce(em.priority, to_number(em.priority)) tdy_priority
           ,EM.First_Eligibility, ed.Tdy_eligibility
           ,NAME_MOTHER,ID_KTP,EXPIRY_DATE_KTP,PRIMARYM_1,PRIMARYM_2,PRIMARYM_3,PRIMARYM_4,PRIMARYM_5,CLIENT_EMAIL
           ,full_address,NAME_TOWN,NAME_SUBDISTRICT,CODE_ZIP_CODE,NAME_DISTRICT,DEAD_CUSTOMER, pilot_name
+          ,case when rec.skf_offer_recalculation is not null then 'SCORED' else 'NOT-SCORED' end ORBP_STATUS
    from eli_monthly em 
    left join eli_daily ED  on ED.ID_CUID=EM.ID_CUID and ED.Valid_from=EM.Valid_from
    LEFT JOIN
@@ -121,6 +125,8 @@ BEGIN
               ,full_address,NAME_TOWN,NAME_SUBDISTRICT,CODE_ZIP_CODE,NAME_DISTRICT,DEAD_CUSTOMER
        from AP_CRM.CAMP_CLIENT_IDENTITY
    ) id ON Em.ID_cuid= ID.ID_CUID
+   JOIN CAMP_ORBP_OFFER OFR on EM.SKP_CLIENT =OFR.SKP_CLIENT
+   left join camp_offer_recalculation rec on em.skp_client = rec.skp_client
    LEFT JOIN ap_crm.v_camp_last_contract lst on EM.SKP_CLIENT =lst.SKP_CLIENT
    WHERE EM.ID_CUID NOT IN (SELECT NVL(ID_CUID,-9999999) FROM CAMP_BLOCK_OFFER WHERE CAMPAIGN_ID = TO_CHAR(SYSDATE,'YYMM'));
    AP_PUBLIC.CORE_LOG_PKG.pEnd;
@@ -129,5 +135,3 @@ BEGIN
     
   AP_PUBLIC.CORE_LOG_PKG.pFinish;
 END;
-/
-
