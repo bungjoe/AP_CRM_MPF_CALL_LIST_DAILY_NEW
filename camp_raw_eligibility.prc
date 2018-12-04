@@ -63,6 +63,7 @@ end if;
 		
 		pTruncate('camp_client_at');
 		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:CAMP_CLIENT_AT');
+		/* Insert only offer for non-oBRP customers */
 		insert /*+ APPEND */ into ap_Crm.CAMP_CLIENT_AT
     select /*+ */
         SKF_CAMPAIGN_CLIENT ,CODE_SOURCE_SYSTEM
@@ -81,14 +82,15 @@ end if;
         ,SKP_CAMPAIGN_TYPE  ,CNT_CAMPAIGN_CLIENT
         ,DTIME_EXPIRATION_OFFER, FLAG_ACTIVE
         ,FLAG_RECALCULATED  ,ID_OFFER 
-    from gtt_camp_client_at where flag_recalculated = 'N';
+    from gtt_camp_client_at where skp_client not in (select count(skp_Client) from camp_orbp_pilot where campaign_id = to_Char(sysdate,'yymm'));
 		AP_PUBLIC.CORE_LOG_PKG.pEnd;
 		commit;
 		pStats('CAMP_CLIENT_AT');
 
     pTruncate('camp_orbp_offer');
 		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:camp_orbp_offer');
-    insert /*+ APPEND */ into ap_Crm.camp_orbp_offer
+    /* Insert only oRBP customers */
+		insert /*+ APPEND */ into ap_Crm.camp_orbp_offer
     select /*+ */
         SKF_CAMPAIGN_CLIENT ,CODE_SOURCE_SYSTEM
         ,ID_SOURCE          ,DATE_EFFECTIVE
@@ -106,7 +108,7 @@ end if;
         ,SKP_CAMPAIGN_TYPE  ,CNT_CAMPAIGN_CLIENT
         ,DTIME_EXPIRATION_OFFER, FLAG_ACTIVE
         ,FLAG_RECALCULATED  ,ID_OFFER 
-    from gtt_camp_client_at where flag_recalculated = 'Y';
+    from gtt_camp_client_at where skp_client in (select count(skp_Client) from camp_orbp_pilot where campaign_id = to_Char(sysdate,'yymm'));
 		AP_PUBLIC.CORE_LOG_PKG.pEnd;
 		commit;
 		pStats('camp_orbp_offer');
@@ -114,16 +116,21 @@ end if;
     pTruncate('camp_offer_recalculation');
 		AP_PUBLIC.CORE_LOG_PKG.pStart('INS:camp_offer_recalculation');
 		insert /*+ APPEND */ into camp_offer_recalculation
+		with base as
+		(
+				select skp_client from camp_orbp_offer_c1
+				where dtime_expiration_offer > trunc(sysdate)
+		)
 		select skf_offer_recalculation, skp_client, skf_offer_rec_main, skf_campaign_client, id_offer, flag_deactivated, id_campaign, 
-					 date_valid_from, date_valid_to, date_expiration_offer, amt_credit_max, amt_instalment_max, text_pricing_category, cnt_instalment, rate_interest,
-					 dtime_obod_generated, dtime_obod_submitted, num_group_position_1 
-		from owner_dwh.f_offer_recalculation_tt a 
-		where (skp_client, id_campaign) in
-					 (
-							 select skp_Client, id_campaign from camp_orbp_offer where flag_active = 'Y'
-					 )
---			and a.FLAG_DEACTIVATED = 'N' /* Turn on this line after data pattern is confirmed after offer is recalculated */       
-		;
+							 date_valid_from, date_valid_to, date_expiration_offer, amt_credit_max, amt_instalment_max, text_pricing_category, cnt_instalment, rate_interest,
+							 dtime_obod_generated, dtime_obod_submitted, num_group_position_1 
+		from owner_Dwh.f_offer_recalculation_tt where (skp_Client, skf_offer_recalculation) in
+		(
+				select skp_client, max(skf_offer_recalculation)skf_offer_recalculation from owner_Dwh.f_offer_recalculation_tt
+				where skp_Client in (select skp_client from base)
+					and flag_deactivated = 'N' and num_group_position_1 = 0
+				group by skp_client
+		);
 		AP_PUBLIC.CORE_LOG_PKG.pEnd;
 		commit;
 		pStats('camp_offer_recalculation');
