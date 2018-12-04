@@ -138,7 +138,7 @@ BEGIN
     )ax 
     left join my_dream md on ax.cuid = md.cuid
     where 1=1 
-    and ax.row_order <= 180000
+    and ax.row_order <= 250000
     union all
     select distinct cci.id_cuid, cmc.contract
            ,case when lower(cci.gender) = 'male' then 'Bpk. ' || cci.name_first || ' ' || cci.name_last
