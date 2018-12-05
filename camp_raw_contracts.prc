@@ -16,278 +16,218 @@ CREATE OR REPLACE PROCEDURE CAMP_RAW_CONTRACTS AS
 BEGIN 
     AP_PUBLIC.CORE_LOG_PKG.pInit( 'AP_CRM', 'CAMP_RAW_CONTRACTS');
     
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:gtt_cmp_raw_cont_fca');
-    insert /*+ APPEND */ into gtt_cmp_raw_cont_fca
-    with base as
+		pTruncate('GTT_CMP_CONT_DCC');
+		AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:gtt_cmp_cont_dcc');
+		insert /*+ APPEND */ into GTT_CMP_CONT_DCC
+		with base as
     (
         select /*+ MATERIALIZE */ skp_Client from camp_elig_base where eligible_final_flag = 1 and priority_actual > 0
         union all
         select skp_Client from camp_orbp_elig_base where eligible_final_flag = 1 and priority_actual > 0
     )
-    select /*+ USE_HASH (FCA DCE)*/
-         fca.skp_credit_case              ,fca.SKP_EMPLOYEE_CONSULTANT
-        ,fex.name_producer                ,fex.name_goods_type
-        ,fex.name_goods_category          ,fex.amt_goods_price
-        ,fex.AMT_DOWN_PAYMENT             ,fca.amt_credit_total
-        ,fex.amt_annuity                  ,bal.cnt_instalment
-        ,fex.amt_fee_origination          ,fca.RATE_EFFECTIVE_INTEREST
-        ,fex.NAME_INSTALMENT_SCHED_METHOD ,fca.dtime_signature_contract
-        ,fca.dtime_activation             ,fca.DTIME_CLOSE
-        ,bal.amt_outstanding_principal    ,bal.dtime_payment_last
-        ,dce.code_employee                ,dce.name_common
-    from owner_Dwh.f_contract_base_ad fca
-    join owner_dwh.f_contract_extension_ad fex on fca.skp_credit_case = fex.skp_credit_case
-    join owner_Dwh.f_Contract_Aggr_Balance_Ad bal on fca.skp_credit_case = bal.skp_credit_case
-    join owner_Dwh.dc_employee dce on fca.skp_employee_consultant = dce.skp_employee
-    where fca.skp_client in (select nvl(skp_client,-9999) from base);
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('gtt_cmp_raw_cont_fca');
+		select /*+ USE_HASH(DCC FCC EB) FULL(DCC) FULL(EB) */ 
+					 dcc.skp_client,                  dcc.skp_credit_case, 
+					 dcc.skp_application,             dcc.skp_contract,
+					 dcc.SKP_SALESROOM_APPL_CREATED,  dcc.skp_credit_status, 
+					 dcc.skp_credit_substatus,        dcc.text_contract_number, 
+					 dcc.text_cancellation_reason,    dcc.text_credit_status_reason
+		from owner_Dwh.dc_Credit_case dcc
+		join base eb on dcc.skp_client = eb.skp_client;
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
+		commit;
+		pstats('GTT_CMP_CONT_DCC');
 
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:gtt_cmp_raw_cont_cc2');
-    insert /*+ APPEND */ into gtt_cmp_raw_cont_cc2
-    with base as
-    (
-        select /*+ MATERIALIZE */ skp_Client from camp_elig_base where eligible_final_flag = 1 and priority_actual > 0
-        union all
-        select skp_Client from camp_orbp_elig_base where eligible_final_flag = 1 and priority_actual > 0
-    )
-		select /*+ USE_HASH(FCA CL CC) */ cc.SKP_Credit_Case, cc.SKP_CONTRACT, cc.SKP_APPLICATION, cc.SKP_CLIENT
-    ,fca.SKP_EMPLOYEE_CONSULTANT      ,cc.skp_salesroom
-    ,cc.text_contract_number          ,cl.name_credit_status
-    ,cc.DTIME_PROPOSAL                ,cc.DTIME_APPL_SENT_TO_EVALUATION SENT_TO_EVALUATE
-    ,cc.DATE_DECISION                 ,cc.DTIME_CANCELLATION
-    ,cc.Flag_Cancelled_Automatically  ,cc.Flag_Cancelled_PRE_APPROVAL
-    ,cc.FLAG_DELETED                  , fca.name_producer
-    , fca.name_goods_type             , fca.name_goods_category
-    , fca.amt_goods_price             , fca.AMT_DOWN_PAYMENT
-    , fca.amt_credit_total            , fca.amt_annuity
-    , fca.CNT_INSTALMENT instalment   , fca.amt_fee_origination
-    , fca.RATE_EFFECTIVE_INTEREST     , fca.NAME_INSTALMENT_SCHED_METHOD
-    , fca.dtime_signature_contract    , fca.dtime_activation
-    , fca.DTIME_CLOSE                 , fca.amt_outstanding_principal
-    , fca.dtime_payment_last          , fca.code_employee code_sales_agent
-    , fca.name_common name_sales_agent
-    from OWNER_DWH.DC_CREDIT_CASE CC 
-    join owner_dwh.CL_CREDIT_STATUS CL on cc.skp_credit_status=cl.skp_credit_status
-    join gtt_cmp_raw_cont_fca fca on cc.skp_credit_case = fca.skp_Credit_case
-    where CC.SKP_SALESROOM not in (61891, 2850271, 5871680) and cc.FLAG_DELETED ='N'
-    and cc.SKP_CREDIT_STATUS in (1, 2, 4, 6, 7, 8, 9, 10)
-    and cc.skp_Client in (select nvl(skp_client,-9999) from base);
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('gtt_cmp_raw_cont_cc2');
-    
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:gtt_cmp_raw_cont_fd');
-    insert /*+ APPEND */ into gtt_cmp_raw_cont_fd
-    select  skp_contract ,min(to_date(trunc(date_instalment))) due_date 
-    from owner_dwh.f_instalment_head_ad 
-    where num_instalment_number=1 and num_instalment_order = 1 and skp_contract in (select SKP_CONTRACT from gtt_cmp_raw_cont_cc2)
-    group by skp_contract;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('gtt_cmp_raw_cont_fd');
+		pTruncate('GTT_CMP_CONT_FCC');
+		AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CONT_FCC');
+		insert /*+ APPEND */ into GTT_CMP_CONT_FCC 
+		select /*+ USE_HASH(FCC EB) FULL(FCC) FULL(EB) */ 
+					 fcc.skp_client,        fcc.SKP_CREDIT_CASE,
+					 fcc.DTIME_PRE_PROCESS, fcc.DTIME_PROCESS, 
+					 fcc.DTIME_REJECTION,   fcc.DTIME_CANCELLATION,
+					 fcc.DTIME_CLOSE,       fcc.DTIME_APPROVAL, 
+					 fcc.DTIME_SIGNATURE,   fcc.DTIME_ACTIVATION
+		from owner_Dwh.f_credit_case_ad fcc
+		join GTT_CMP_CONT_DCC eb on fcc.skp_client = eb.skp_client 
+		 and fcc.SKP_CREDIT_CASE = eb.skp_credit_case;
+		AP_PUBLIC.CORE_LOG_PKG.pEnd;
+		commit;
+		pstats('GTT_CMP_CONT_FCC');
 
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:gtt_cmp_raw_cont_dcs' );
-    insert /*+ APPEND */ into gtt_cmp_raw_cont_dcs
-    select /*+ USE_HASH(DSH DSL CSC DCS)*/ distinct dcs.skp_salesroom, dcs.code_salesroom, dcs.name_salesroom, dcs.NUM_GPS_LATITUDE, dcs.NUM_GPS_LONGTITUDE
-    , dsl.CODE_SELLER code_partner, dsl.NAME_SELLER name_partner , dsh.name_sales_business_area, dsh.name_sales_district
-    , case when csc.name_seller_category_type = 'KA' then 'Key Account' else csc.name_seller_category_type end partner_category
-    from owner_dwh.dc_salesroom dcs
-    join OWNER_DWH.DC_SALES_HIERARCHY dsh on dcs.SKP_SALES_HIERARCHY = dsh.SKP_SALES_HIERARCHY
-    join owner_dwh.dc_seller dsl on dcs.skp_seller = dsl.SKP_SELLER
-    join OWNER_DWH.cl_seller_category_type csc on dsl.skp_seller_category_type = csc.skp_seller_category_type
-    where dcs.skp_salesroom in (select nvl(skp_salesroom,-9999) from gtt_cmp_raw_cont_cc2);
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('gtt_cmp_raw_cont_dcs');
+		pTruncate('GTT_CMP_CONT_FCB');
+		AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CONT_FCB');
+		insert /*+ APPEND */ into GTT_CMP_CONT_FCB
+		select /*+ USE_HASH(FCB DCC) FULL(FCB) FULL(DCC) */ 
+					 fcb.skp_credit_case,   fcb.skp_client, 
+					 fcb.skp_contract,      fcb.skp_employee_consultant, 
+					 fcb.flag_early_repaid, fcb.flag_gift_payment_used,
+					 fcb.amt_credit_total
+		from owner_Dwh.f_contract_base_ad fcb
+		join GTT_CMP_CONT_DCC dcc on fcb.skp_credit_case = dcc.skp_credit_case;
+		AP_PUBLIC.CORE_LOG_PKG.pEnd;
+		commit;
+		pstats('GTT_CMP_CONT_FCB');
 
-    pTruncate('CAMP_POS_CONTRACTS');
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:CAMP_POS_CONTRACTS' );
-    insert /*+ APPEND */ into ap_crm.camp_pos_contracts
-    select /*+  USE_HASH(CC DCS FD) */
-    cc.SKP_Credit_Case                ,cc.SKP_CONTRACT
-    ,cc.SKP_APPLICATION               ,cc.SKP_CLIENT
-    ,cc.SKP_EMPLOYEE_CONSULTANT       ,cc.text_contract_number
-    ,CC.name_credit_status           ,cc.DTIME_PROPOSAL
-    ,cc.SENT_TO_EVALUATE              ,cc.DATE_DECISION
-    ,cc.DTIME_CANCELLATION            ,cc.dtime_signature_contract
-    ,cc.dtime_activation              ,cc.DTIME_CLOSE
-    ,cc.dtime_payment_last            ,fd.due_date
-    ,cc.Flag_Cancelled_Automatically  ,cc.Flag_Cancelled_PRE_APPROVAL
-    ,cc.FLAG_DELETED                  ,cc.name_producer
-    ,cc.name_goods_type               ,cc.name_goods_category
-    ,cc.amt_goods_price               ,cc.AMT_DOWN_PAYMENT
-    ,cc.amt_credit_total              ,cc.amt_annuity
-    ,cc.instalment                    ,cc.amt_fee_origination
-    ,cc.RATE_EFFECTIVE_INTEREST       ,cc.NAME_INSTALMENT_SCHED_METHOD
-    ,cc.amt_outstanding_principal     ,cc.code_sales_agent, cc.name_sales_agent
-    ,dcs.code_salesroom               ,dcs.name_salesroom
-    ,dcs.NUM_GPS_LATITUDE             ,dcs.NUM_GPS_LONGTITUDE
-    ,dcs.code_partner                 ,dcs.name_partner
-    ,dcs.partner_category             ,dcs.name_sales_business_area
-    ,dcs.name_sales_district
-    from gtt_cmp_raw_cont_cc2 cc
-    left join gtt_cmp_raw_cont_dcs dcs on cc.skp_salesroom = dcs.skp_salesroom
-    left join gtt_cmp_raw_cont_fd fd on cc.skp_contract = fd.skp_contract;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('CAMP_POS_CONTRACTS');
+    pTruncate('GTT_CMP_CONT_FCE');
+		AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CONT_FCE');
+		insert /*+ APPEND */ into GTT_CMP_CONT_FCE
+		select /*+ USE_HASH(FCE DCC) FULL(FCE) FULL(DCC)*/
+					 fce.skp_client,          fce.skp_credit_case,       
+					 fce.skp_contract,        fce.amt_annuity,       
+					 fce.amt_credit_signed,   fce.amt_down_payment,  
+					 fce.amt_fee_origination, fce.amt_goods_price,
+					 fce.name_goods_category, fce.name_goods_type,   
+					 fce.name_instalment_sched_method,
+					 fce.name_producer
+		from owner_Dwh.f_Contract_Extension_Ad fce       
+		join GTT_CMP_CONT_DCC dcc on fce.skp_credit_case = dcc.skp_credit_case;
+		AP_PUBLIC.CORE_LOG_PKG.pEnd;
+		commit;
+		pstats('GTT_CMP_CONT_FCE');
 
-  AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:gtt_cmp_raw_cont_cc');
-  insert /*+ APPEND */ into gtt_cmp_raw_cont_cc
-  with base as
-    (
-        select /*+ MATERIALIZE */ skp_Client from camp_elig_base where eligible_final_flag = 1 and priority_actual > 0
-        union all
-        select skp_Client from camp_orbp_elig_base where eligible_final_flag = 1 and priority_actual > 0
-    )
-	SELECT 
-    /*+ USE_HASH (CC CL) */
-    SKP_CREDIT_CASE,
-    SKP_CONTRACT,
-    SKP_APPLICATION,
-    SKP_CLIENT,
-    TEXT_CONTRACT_NUMBER CONTRACT,
-    NAME_CREDIT_STATUS ,
-    DTIME_PROPOSAL SEND_TO_IDENTIFICATE ,
-    DTIME_APPL_SENT_TO_EVALUATION SENT_TO_EVALUATE ,
-    DATE_DECISION ,
-    DTIME_CANCELLATION ,
-    FLAG_CANCELLED_AUTOMATICALLY,
-    FLAG_CANCELLED_PRE_APPROVAL,
-    CC.FLAG_DELETED ,
-    CC.SKP_SALESROOM,
-    DCS.CODE_SALESROOM,
-    UPPER(DCS.NAME_SALESROOM) AS NAME_SALESROOM
-  FROM OWNER_DWH.DC_CREDIT_CASE CC
-  JOIN OWNER_DWH.CL_CREDIT_STATUS CL
-  ON CC.SKP_CREDIT_STATUS=CL.SKP_CREDIT_STATUS
-  JOIN OWNER_DWH.DC_SALESROOM DCS
-  ON CC.SKP_SALESROOM     = DCS.SKP_SALESROOM
-  WHERE CC.SKP_SALESROOM IN ('61891','2850271','5871680')
-  AND CC.FLAG_DELETED     ='N'
-  AND CC.SKP_CLIENT       IN
-    (SELECT NVL(SKP_CLIENT,-9999) FROM BASE );
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('gtt_cmp_raw_cont_cc');
+		pTruncate('GTT_CMP_CONT_FCAB');
+		AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CONT_FCAB');		
+		insert /*+ APPEND */ into GTT_CMP_CONT_FCAB
+		select /*+ USE_HASH(FCAB DCC) FULL(FCA) FULL(DCC) */
+					 fcab.skp_client,       fcab.skp_credit_case,      
+					 fcab.amt_outstanding_principal,
+					 fcab.cnt_instalment,   fcab.date_last_payment,
+					 case when fcab.date_next_due = to_date('01/01/3000','mm/dd/yyyy') then fcab.date_last_due else fcab.date_next_due end due_date,
+					 dcc.text_contract_number
+		from owner_Dwh.f_Contract_Aggr_Balance_Ad fcab
+		join GTT_CMP_CONT_DCC dcc on fcab.skp_credit_case = dcc.Skp_Credit_Case;
+		AP_PUBLIC.CORE_LOG_PKG.pEnd;
+		commit;
+		pstats('GTT_CMP_CONT_FCAB');
 
-  AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:gtt_cmp_raw_cont_op');
- insert /*+ APPEND */ into gtt_cmp_raw_cont_op 
- SELECT
-    OP.SKP_CREDIT_CASE,
-    NAME_RECIPIENT,
-    AMT_PAYMENT ,
-    DTIME_PAYMENT DISBURSE_DATE ,
-    NAME_OUTGOING_PAYMENT_STATUS PAYMENT_STATUS
-  FROM OWNER_DWH.F_OUTGOING_PAYMENT_TT OP
-  JOIN OWNER_DWH.CL_OUTGOING_PAYMENT_TYPE PT
-  ON PT.SKP_OUTGOING_PAYMENT_TYPE = OP.SKP_OUTGOING_PAYMENT_TYPE
-  JOIN OWNER_DWH.CL_OUTGOING_PAYMENT_STATUS PS
-  ON PS.SKP_OUTGOING_PAYMENT_STATUS = OP.SKP_OUTGOING_PAYMENT_STATUS
-  WHERE OP.FLAG_DELETED             = 'N'
-  AND OP.SKP_CREDIT_CASE           IN
-    (SELECT NVL(SKP_CREDIT_CASE,-9999999) FROM gtt_cmp_raw_cont_cc)
-  AND PT.CODE_OUTGOING_PAYMENT_TYPE = 'CL';
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('gtt_cmp_raw_cont_op');
+		ptruncate('GTT_CMP_CONT_OP');
+		AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CONT_OP');		
+		insert /*+ APPEND */ into GTT_CMP_CONT_OP
+		SELECT /*+ USE_HASH(OP DCC PT PS) FULL(OP) FULL(DCC) */
+				OP.SKP_CREDIT_CASE,  op.NAME_RECIPIENT,
+				op.AMT_PAYMENT ,     op.DTIME_PAYMENT DISBURSE_DATE ,
+				ps.NAME_OUTGOING_PAYMENT_STATUS PAYMENT_STATUS
+		FROM OWNER_DWH.F_OUTGOING_PAYMENT_TT OP
+		join GTT_CMP_CONT_DCC dcc on op.skp_credit_case = dcc.skp_credit_case and dcc.skp_salesroom_appl_created in (61891,2850271,5871680)
+		JOIN OWNER_DWH.CL_OUTGOING_PAYMENT_TYPE PT ON PT.SKP_OUTGOING_PAYMENT_TYPE = OP.SKP_OUTGOING_PAYMENT_TYPE
+		JOIN OWNER_DWH.CL_OUTGOING_PAYMENT_STATUS PS ON PS.SKP_OUTGOING_PAYMENT_STATUS = OP.SKP_OUTGOING_PAYMENT_STATUS
+		WHERE OP.FLAG_DELETED = 'N'
+			AND PT.CODE_OUTGOING_PAYMENT_TYPE = 'CL'
+			and ps.NAME_OUTGOING_PAYMENT_STATUS <> 'Cancelled';
+		AP_PUBLIC.CORE_LOG_PKG.pEnd;
+		commit;
+		pstats('GTT_CMP_CONT_OP');
 
-  AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:gtt_cmp_raw_cont_fcc');
-    insert /*+ APPEND */ into gtt_cmp_raw_cont_fcc
-    SELECT
-    FE.SKP_CREDIT_CASE ,
-    FE.DTIME_PRE_PROCESS ,
-    FE.DTIME_PROCESS ,
-    FE.DTIME_REJECTION ,
-    FE.DTIME_APPROVAL ,
-    FE.DTIME_SIGNATURE ,
-    FE.DTIME_ACTIVATION ,
-    FE.TEXT_CANCELLATION_REASON,
-    FE.TEXT_CREDIT_STATUS_REASON
-  FROM OWNER_DWH.F_CREDIT_CASE_AD FE
-  JOIN gtt_cmp_raw_cont_cc cc ON FE.SKP_CREDIT_CASE=CC.SKP_CREDIT_CASE
-  WHERE FE.FLAG_DELETED   = 'N';
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('gtt_cmp_raw_cont_fcc');
+		ptruncate('GTT_CMP_CONT_FAE');
+		AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CONT_FAE');
+		insert /*+ APPEND */ into GTT_CMP_CONT_FAE
+		SELECT /*+ USE_HASH(FAE DCC) FULL(FAE) FULL(DCC) */
+					fae.skp_credit_case,           fae.SKP_APPLICATION,
+					fae.DTIME_APPL_CREATION,       fae.DTIME_APPL_ARRANGED,
+					fae.SKP_EMPLOYEE_CREATED_APPL, fae.SKP_EMPLOYEE_ARRANGED_APPL,
+					fae.FLAG_APPL_FILLED_OFFLINE
+		FROM OWNER_DWH.F_APPLICATION_EVENT_AT fae
+		join GTT_CMP_CONT_DCC dcc on fae.skp_credit_case = dcc.skp_credit_case
+		WHERE FLAG_DELETED ='N';
+		AP_PUBLIC.CORE_LOG_PKG.pEnd;
+		commit;
+		pstats('GTT_CMP_CONT_FAE');
 
-  AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:gtt_cmp_raw_cont_apev');  
-  insert /*+ APPEND */ into gtt_cmp_raw_cont_apev
-  SELECT
-    SKP_APPLICATION ,
-    DTIME_APPL_CREATION ,
-    DTIME_APPL_ARRANGED ,
-    SKP_EMPLOYEE_CREATED_APPL,
-    SKP_EMPLOYEE_ARRANGED_APPL,
-    FLAG_APPL_FILLED_OFFLINE
-  FROM OWNER_DWH.F_APPLICATION_EVENT_AT
-  WHERE FLAG_DELETED   ='N'
-  AND SKP_CREDIT_CASE IN
-    (SELECT NVL(SKP_CREDIT_CASE,-9999999) FROM gtt_cmp_raw_cont_cc
-    );
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('gtt_cmp_raw_cont_apev');
-  
-  AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:gtt_cmp_raw_cont_fd');
-  insert /*+ APPEND */ into gtt_cmp_raw_cont_fd
-   SELECT SKP_CONTRACT ,
-    MIN(TO_DATE(TRUNC(DATE_INSTALMENT))) DUE_DATE
-  FROM OWNER_DWH.F_INSTALMENT_HEAD_AD
-  WHERE NUM_INSTALMENT_NUMBER=1
-  AND NUM_INSTALMENT_ORDER   = 1
-  AND SKP_CONTRACT          IN
-    (SELECT NVL(SKP_CONTRACT,-999999999) FROM gtt_cmp_raw_cont_cc )
-  GROUP BY SKP_CONTRACT ;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
-    commit;
-    pStats('gtt_cmp_raw_cont_fd');
+		ptruncate('GTT_CMP_CONT_DCS');
+		AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:GTT_CMP_CONT_DCS');		
+		insert /*+ APPEND */ into GTT_CMP_CONT_DCS
+		select /*+ USE_HASH(DSH DSL CSC DCS)*/ 
+					 distinct 
+					 dcs.skp_salesroom,       dcs.code_salesroom, 
+					 dcs.name_salesroom,      dcs.NUM_GPS_LATITUDE, 
+					 dcs.NUM_GPS_LONGTITUDE,  dsl.CODE_SELLER code_partner, 
+					 dsl.NAME_SELLER,         dsh.name_sales_business_area, 
+					 dsh.name_sales_district, 
+					 case when csc.name_seller_category_type = 'KA' then 'Key Account' else csc.name_seller_category_type end partner_category
+		from owner_dwh.dc_salesroom dcs
+		join GTT_CMP_CONT_DCC dcc on dcc.skp_salesroom_appl_created = dcs.SKP_SALESROOM
+		join OWNER_DWH.DC_SALES_HIERARCHY dsh on dcs.SKP_SALES_HIERARCHY = dsh.SKP_SALES_HIERARCHY
+		join owner_dwh.dc_seller dsl on dcs.skp_seller = dsl.SKP_SELLER
+		join OWNER_DWH.cl_seller_category_type csc on dsl.skp_seller_category_type = csc.skp_seller_category_type
+		;
+		AP_PUBLIC.CORE_LOG_PKG.pEnd;
+		commit;    
+		pstats('GTT_CMP_CONT_DCS');
 
-    pTruncate('CAMP_MPF_CONTRACTS');
-    AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:CAMP_MPF_CONTRACTS');
-    insert /*+ APPEND */ into ap_crm.camp_mpf_contracts    
-    SELECT
-    /*+  USE_HASH (CC OP App_event fcc First_due) */
-    DISTINCT CC.SKP_CREDIT_CASE,
-    CC.SKP_APPLICATION,
-    CC.SKP_CLIENT,
-    CC.SKP_CONTRACT ,
-    CC.SKP_SALESROOM,
-    CC.CODE_SALESROOM,
-    CC.NAME_SALESROOM,
-    CONTRACT ,
-    NAME_CREDIT_STATUS ,
-    DTIME_APPL_CREATION ,
-    DTIME_APPL_ARRANGED ,
-    DTIME_PRE_PROCESS ,
-    SEND_TO_IDENTIFICATE ,
-    DTIME_PROCESS ,
-    SENT_TO_EVALUATE ,
-    DTIME_APPROVAL ,
-    DTIME_REJECTION ,
-    DTIME_SIGNATURE ,
-    CC.DATE_DECISION ,
-    NAME_RECIPIENT ,
-    AMT_PAYMENT ,
-    DISBURSE_DATE ,
-    DTIME_ACTIVATION ,
-    DUE_DATE ,
-    PAYMENT_STATUS ,
-    DTIME_CANCELLATION ,
-    TEXT_CANCELLATION_REASON ,
-    TEXT_CREDIT_STATUS_REASON ,
-    FLAG_CANCELLED_AUTOMATICALLY ,
-    FLAG_CANCELLED_PRE_APPROVAL
-    FROM gtt_cmp_raw_cont_cc CC
-    left JOIN gtt_cmp_raw_cont_OP op  ON CC.SKP_CREDIT_CASE = OP.SKP_CREDIT_CASE
-    left JOIN gtt_cmp_raw_cont_apev APP_EVENT ON APP_EVENT.SKP_APPLICATION=CC.SKP_APPLICATION
-    left JOIN gtt_cmp_raw_cont_fcc FCC ON FCC.SKP_CREDIT_CASE=CC.SKP_CREDIT_CASE
-    left JOIN gtt_cmp_raw_cont_fd FIRST_DUE ON FIRST_DUE.SKP_CONTRACT=CC.SKP_CONTRACT;
-    AP_PUBLIC.CORE_LOG_PKG.pEnd ;
+		/* MPF Contracts */
+		ptruncate('camp_mpf_contracts');
+		AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:camp_mpf_contracts');
+		insert /*+ APPEND */ into camp_mpf_contracts
+		SELECT
+    /*+ USE_HASH(DCC FCC FAE FCAB DCS FOP CCS) FULL(DCC) 
+        FULL(FCC) FULL(FAE) FULL(FCAB) FULL(DCS) FULL(FOP) 
+    */
+    dcc.SKP_CREDIT_CASE,               dcc.SKP_APPLICATION,
+    dCC.SKP_CLIENT,                    dCC.SKP_CONTRACT,
+    dCC.Skp_Salesroom_Appl_Created,    dcs.CODE_SALESROOM,
+    dcs.NAME_SALESROOM,                dcc.text_contract_number,
+    ccs.NAME_CREDIT_STATUS,            fae.DTIME_APPL_CREATION,
+    fae.DTIME_APPL_ARRANGED,           fcc.DTIME_PRE_PROCESS,
+    null SEND_TO_IDENTIFICATE,         fcc.DTIME_PROCESS,
+    null SENT_TO_EVALUATE,             fcc.DTIME_APPROVAL,
+    fcc.DTIME_REJECTION,               fcc.DTIME_SIGNATURE,
+    null DATE_DECISION,                fop.NAME_RECIPIENT,
+    fop.AMT_PAYMENT,                   fop.DISBURSE_DATE,
+    fcc.DTIME_ACTIVATION,              fcab.DUE_DATE,
+    fop.PAYMENT_STATUS,                fcc.DTIME_CANCELLATION,
+    dcc.TEXT_CANCELLATION_REASON,      dcc.TEXT_CREDIT_STATUS_REASON,
+    null FLAG_CANCELLED_AUTOMATICALLY, null FLAG_CANCELLED_PRE_APPROVAL
+    FROM GTT_CMP_CONT_DCC dcc
+    join GTT_CMP_CONT_FCC fcc on dcc.skp_credit_case = fcc.skp_credit_case 
+    join GTT_CMP_CONT_FAE fae on dcc.Skp_Credit_Case = fae.skp_credit_case
+    join GTT_CMP_CONT_FCAB fcab on dcc.Skp_Credit_Case = fcab.skp_credit_case
+    left join GTT_CMP_CONT_OP fop on dcc.skp_credit_case = fop.skp_credit_case
+    join owner_Dwh.dc_salesroom dcs on dcc.skp_salesroom_appl_created = dcs.SKP_SALESROOM
+    join owner_dwh.cl_credit_status ccs on dcc.skp_credit_status = ccs.SKP_CREDIT_STATUS
+    where dcc.skp_salesroom_appl_created in (61891,2850271,5871680);
+    AP_PUBLIC.CORE_LOG_PKG.pEnd;
     commit;
-    pStats('CAMP_MPF_CONTRACTS');
+    pstats('camp_mpf_contracts');
+
+    /* POS Contracts */
+		ptruncate('camp_pos_contracts');
+		AP_PUBLIC.CORE_LOG_PKG.pStart('Ins:camp_pos_contracts');		
+		insert /*+ APPEND */ into camp_pos_contracts
+		select /*+  USE_HASH(FCB FCC FCE FAE FCEB FOP DCS DCE CCS DCC) */
+				 dcc.SKP_Credit_Case                ,dcc.SKP_CONTRACT
+				,dcc.SKP_APPLICATION                ,dcc.SKP_CLIENT
+				,fcb.SKP_EMPLOYEE_CONSULTANT        ,dcc.text_contract_number
+				,CCs.name_credit_status             ,null DTIME_PROPOSAL
+				,null SENT_TO_EVALUATE              ,null DATE_DECISION
+				,fcc.DTIME_CANCELLATION             ,fcc.dtime_signature
+				,fcc.dtime_activation               ,fcc.DTIME_CLOSE
+				,fcab.date_last_payment             ,fcab.due_date
+				,null Flag_Cancelled_Automatically  ,null Flag_Cancelled_PRE_APPROVAL
+				,null FLAG_DELETED                  ,fce.name_producer
+				,fce.name_goods_type                ,fce.name_goods_category
+				,fce.amt_goods_price                ,fce.AMT_DOWN_PAYMENT
+				,fcb.amt_credit_total               ,fce.amt_annuity
+				,fcab.cnt_instalment                ,fce.amt_fee_origination
+				,null RATE_EFFECTIVE_INTEREST       ,fce.NAME_INSTALMENT_SCHED_METHOD
+				,fcab.amt_outstanding_principal     ,dce.CODE_EMPLOYEE
+				,dce.NAME_COMMON name_sales_agent   ,dcs.code_salesroom
+				,dcs.name_salesroom                 ,dcs.NUM_GPS_LATITUDE             
+				,dcs.NUM_GPS_LONGTITUDE             ,dcs.code_partner                 
+				,dcs.name_seller                    ,dcs.partner_category             
+				,dcs.name_sales_business_area       ,dcs.name_sales_district
+    from GTT_CMP_CONT_DCC dcc
+    join GTT_CMP_CONT_FCB fcb on dcc.skp_credit_case = fcb.skp_credit_case 
+    join GTT_CMP_CONT_FCC fcc on dcc.skp_credit_case = fcc.skp_credit_case 
+    join GTT_CMP_CONT_FCE fce on dcc.skp_credit_case = fce.skp_credit_case
+    join GTT_CMP_CONT_FAE fae on dcc.Skp_Credit_Case = fae.skp_credit_case
+    join GTT_CMP_CONT_FCAB fcab on dcc.Skp_Credit_Case = fcab.skp_credit_case
+    join GTT_CMP_CONT_DCS dcs on dcc.skp_salesroom_appl_created = dcs.skp_salesroom
+    left join GTT_CMP_CONT_OP fop on dcc.skp_credit_case = fop.skp_credit_case
+    left join owner_dwh.dc_employee dce on fcb.skp_employee_consultant = dce.SKP_EMPLOYEE
+    join owner_dwh.cl_credit_status ccs on dcc.skp_credit_status = ccs.SKP_CREDIT_STATUS
+    where dcc.skp_salesroom_appl_created not in (61891,2850271,5871680);
+    ap_public.core_log_pkg.pEnd;
+		commit;
+    pstats('camp_pos_contracts');     
     
     AP_PUBLIC.CORE_LOG_PKG.pFinish ;
 end;
